@@ -4,4 +4,8 @@
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.StarterAssets.Editor.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets.csproj" />
   <Project Path="Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets.Editor.csproj" />
+  <Project Path="Mediapipe.Unity.Sample.csproj" />
+  <Project Path="MagicLeap.SetupTool.Editor.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
+  <Project Path="ThirdParty.Bunny83.simpleJson.csproj" />
 </Solution>
