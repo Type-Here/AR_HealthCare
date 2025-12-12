@@ -4,6 +4,7 @@
 // license that can be found in the LICENSE file or at
 // https://opensource.org/licenses/MIT.
 
+using System;
 using System.Collections;
 using Mediapipe.Tasks.Vision.PoseLandmarker;
 using UnityEngine;
@@ -22,6 +23,15 @@ namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection
 
     // ADDED: Added to access the latest result from other scripts
     public PoseLandmarkerResult LatestResult { get; private set; }
+
+    // NEW: event for consumers (IK, gameplay, etc.)
+    public event Action<PoseLandmarkerResult> ResultUpdated;
+
+    private void SetLatestResult(PoseLandmarkerResult r)
+    {
+      LatestResult = r;
+      ResultUpdated?.Invoke(r);
+    }
 
     public override void Stop()
     {
@@ -137,25 +147,31 @@ namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection
           case Tasks.Vision.Core.RunningMode.IMAGE:
             if (taskApi.TryDetect(image, imageProcessingOptions, ref result))
             {
+              SetLatestResult(result);
               _poseLandmarkerResultAnnotationController.DrawNow(result);
             }
             else
             {
+              SetLatestResult(default);
               _poseLandmarkerResultAnnotationController.DrawNow(default);
             }
             DisposeAllMasks(result);
             break;
+
           case Tasks.Vision.Core.RunningMode.VIDEO:
             if (taskApi.TryDetectForVideo(image, GetCurrentTimestampMillisec(), imageProcessingOptions, ref result))
             {
+              SetLatestResult(result);
               _poseLandmarkerResultAnnotationController.DrawNow(result);
             }
             else
             {
+              SetLatestResult(default);
               _poseLandmarkerResultAnnotationController.DrawNow(default);
             }
             DisposeAllMasks(result);
             break;
+
           case Tasks.Vision.Core.RunningMode.LIVE_STREAM:
             taskApi.DetectAsync(image, GetCurrentTimestampMillisec(), imageProcessingOptions);
             break;
