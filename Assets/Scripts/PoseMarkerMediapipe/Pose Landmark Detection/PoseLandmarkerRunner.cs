@@ -181,10 +181,9 @@ namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection
 
     private void OnPoseLandmarkDetectionOutput(PoseLandmarkerResult result, Image image, long timestamp)
     {
-
-      // ADDED: Keep the latest result accessible
-      // Note: We copy the result. Landmarks are safe, masks are disposed after.
-      LatestResult = result;
+      // ADDED: Keep the latest result accessible and notify subscribers
+      // Note: Consumers should only rely on landmarks; segmentation masks are disposed after.
+      SetLatestResult(result);
 
       _poseLandmarkerResultAnnotationController.DrawLater(result);
       DisposeAllMasks(result);
