@@ -47,7 +47,6 @@ public class MediaPipeAvatarIKBridge : MonoBehaviour
     private void OnResultUpdated(PoseLandmarkerResult result)
     {
         if (avatarIK == null) return;
-        if (result == null) return;
         if (result.poseWorldLandmarks == null || result.poseWorldLandmarks.Count == 0) return;
 
         var landmarks = result.poseWorldLandmarks[0].landmarks;
