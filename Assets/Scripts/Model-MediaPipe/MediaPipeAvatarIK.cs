@@ -70,7 +70,7 @@ public class MediaPipeAvatarIK : MonoBehaviour
         if (target != null)
         {
             // Applichiamo la posizione.
-            // NOTA: Se il modello si muove al contrario, prova a invertire assi qui
+            // NOTA: Se il modello si muove al contrario, invertire assi qui
             // Es: new Vector3(-rawPos.x, -rawPos.y, rawPos.z)
             target.position = (rawPos * movementScale) + globalOffset;
         }
