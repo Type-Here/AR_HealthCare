@@ -108,7 +108,7 @@ namespace ARHealthCare.Input
         private const string _TAG = "ARFImageSource";
 
 
-        public ARFImageSource(int preferableDefaultWidth)
+        public ARFImageSource(int preferableDefaultWidth=1280)
         {
             _preferableDefaultWidth = preferableDefaultWidth;
         }
@@ -133,7 +133,7 @@ namespace ARHealthCare.Input
 
         [SerializeField,
         Tooltip("Nome della sorgente mostrato nei menu MediaPipe.")]
-        private string _sourceName = "AR Foundation Camera";
+        private string _sourceName = "ARFCamera";
 
         private bool _isPlaying = false;
 
@@ -178,6 +178,11 @@ namespace ARHealthCare.Input
                 if (_availableResolutions == null || _availableResolutions.Length == 0)
                 {
                     var tex = CurrentTexture;
+                     var refreshRate = new RefreshRate
+                        {
+                            numerator = 30,
+                            denominator = 1,
+                        };
                     if (tex != null)
                     {
                         _availableResolutions = new[]
@@ -186,12 +191,12 @@ namespace ARHealthCare.Input
                         {
                             width  = tex.width,
                             height = tex.height,
-                            frameRate = 30, //TODO: Get real framerate if possible
+                            frameRate = refreshRate,
                         }
                     };
                     }
                     else
-                    {
+                    {   
                         // Use a default resolution as fallback
                         _availableResolutions = new[]
                         {
@@ -199,7 +204,7 @@ namespace ARHealthCare.Input
                         {
                             width  = 1280,
                             height = 720,
-                            frameRate = 30,
+                            frameRate = refreshRate,
                         }
                     };
                     }
@@ -234,15 +239,37 @@ namespace ARHealthCare.Input
                 _arBridge = UnityEngine.Object.FindFirstObjectByType<ARFCameraBridge>();
         }
 
-        // TODO: CHECK: Is this needed with AR Foundation?
+
         private IEnumerator GetPermission()
         {
             lock (_PermissionLock)
             {
-                if (_IsPermitted) yield break;
-                // Added: With ARFoundation, permission handling is done by the XR runtime (ML2 / Quest / etc.).
-                // Here we can simply mark permission as granted.
-                _IsPermitted = true;
+                if (_IsPermitted) yield break;        
+#if UNITY_ANDROID
+                if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
+                {
+                Permission.RequestUserPermission(Permission.Camera);
+                yield return new WaitForSeconds(0.1f);
+                }
+#elif UNITY_IOS
+                if (!Application.HasUserAuthorization(UserAuthorization.WebCam)) {
+                    yield return Application.RequestUserAuthorization(UserAuthorization.WebCam);
+                }
+#endif
+
+#if UNITY_ANDROID
+                if (!Permission.HasUserAuthorizedPermission(Permission.Camera))
+                {
+                Debug.LogWarning("Not permitted to use Camera");
+                yield break;
+                }
+#elif UNITY_IOS
+                if (!Application.HasUserAuthorization(UserAuthorization.WebCam)) {
+                    Debug.LogWarning("Not permitted to use WebCam");
+                    yield break;
+                }
+#endif
+                _IsPermitted = true; 
                 // Wait one frame to simulate async permission request
                 yield return new WaitForEndOfFrame();
             }
@@ -359,7 +386,7 @@ namespace ARHealthCare.Input
                     return a.height - b.height;
                 }
                 // prefer smaller frame rate
-                return (int)(a.frameRate - b.frameRate);
+                return a.frameRate.CompareTo(b.frameRate);
             }
         }
 

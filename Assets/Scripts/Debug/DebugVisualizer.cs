@@ -19,7 +19,7 @@ public class DebugVisualizer : MonoBehaviour
         if (trackingProviderBehaviour == null)
         {
             // Fallback: first TrackingManager in the scene
-            var manager = FindObjectOfType<TrackingManager>();
+            var manager = FindFirstObjectByType<TrackingManager>();
             if (manager != null)
             {
                 trackingProviderBehaviour = manager;

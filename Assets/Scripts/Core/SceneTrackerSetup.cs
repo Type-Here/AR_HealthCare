@@ -1,6 +1,6 @@
 using UnityEngine;
 using ARHealthCare.Trackers;
-using Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection; //MediaPipe Runner reference
+using Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection; //MediaPipe Runner reference
 using ARHealthCare.Core; // Manager reference
 
 namespace ARHealthCare.Core 

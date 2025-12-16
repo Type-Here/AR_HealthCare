@@ -2,7 +2,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using ARHealthCare.DataClasses;
 
-using Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection; 
+using Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection; 
 using Mediapipe.Tasks.Vision.PoseLandmarker;
 using Mediapipe.Tasks.Components.Containers; // Landmark Class here
 
