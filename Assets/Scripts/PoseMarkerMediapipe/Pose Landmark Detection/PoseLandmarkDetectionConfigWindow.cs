@@ -6,10 +6,10 @@
 
 using UnityEngine;
 using UnityEngine.UI;
-using Mediapipe.Unity.Sample.UI;
-using Mediapipe.Unity.Sample;
+using Mediapipe.ARHealthCare.Sample.UI;
+using Mediapipe.ARHealthCare.Sample;
 
-namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection.UI
+namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection.UI
 {
   public class PoseLandmarkDetectionConfigWindow : ModalContents
   {

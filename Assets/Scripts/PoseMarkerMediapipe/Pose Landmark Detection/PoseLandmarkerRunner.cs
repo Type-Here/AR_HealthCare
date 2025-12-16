@@ -8,19 +8,23 @@ using System.Collections;
 using Mediapipe.Tasks.Vision.PoseLandmarker;
 using UnityEngine;
 using UnityEngine.Rendering;
-using Mediapipe.Unity.Sample;
+using Mediapipe.ARHealthCare.Sample;
+using ARHealthCare.Input;
+using UnityEngine.Scripting;
+using Mediapipe.Unity;
 
-namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection
+namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
 {
   public class PoseLandmarkerRunner : VisionTaskApiRunner<PoseLandmarker>
   {
     [SerializeField] private PoseLandmarkerResultAnnotationController _poseLandmarkerResultAnnotationController;
 
-    private Experimental.TextureFramePool _textureFramePool;
+    private Unity.Experimental.TextureFramePool _textureFramePool;
 
     public readonly PoseLandmarkDetectionConfig config = new PoseLandmarkDetectionConfig();
 
     // ADDED: Added to access the latest result from other scripts
+    [Preserve]
     public PoseLandmarkerResult LatestResult { get; private set; }
 
     public override void Stop()
@@ -31,7 +35,7 @@ namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection
     }
 
     protected override IEnumerator Run()
-    {
+    { 
       Debug.Log($"Delegate = {config.Delegate}");
       Debug.Log($"Image Read Mode = {config.ImageReadMode}");
       Debug.Log($"Model = {config.ModelName}");
@@ -47,6 +51,7 @@ namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection
       var options = config.GetPoseLandmarkerOptions(config.RunningMode == Tasks.Vision.Core.RunningMode.LIVE_STREAM ? OnPoseLandmarkDetectionOutput : null);
       taskApi = PoseLandmarker.CreateFromOptions(options, GpuManager.GpuResources);
       var imageSource = ImageSourceProvider.ImageSource;
+  
 
       yield return imageSource.Play();
 
@@ -58,7 +63,7 @@ namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection
 
       // Use RGBA32 as the input format.
       // TODO: When using GpuBuffer, MediaPipe assumes that the input format is BGRA, so maybe the following code needs to be fixed.
-      _textureFramePool = new Experimental.TextureFramePool(imageSource.textureWidth, imageSource.textureHeight, TextureFormat.RGBA32, 10);
+      _textureFramePool = new Unity.Experimental.TextureFramePool(imageSource.textureWidth, imageSource.textureHeight, TextureFormat.RGBA32, 10);
 
       // NOTE: The screen will be resized later, keeping the aspect ratio.
       screen.Initialize(imageSource);

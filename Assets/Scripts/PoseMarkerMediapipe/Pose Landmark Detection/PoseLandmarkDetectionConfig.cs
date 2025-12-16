@@ -6,9 +6,9 @@
 
 using System.ComponentModel;
 using Mediapipe.Tasks.Vision.PoseLandmarker;
-using Mediapipe.Unity.Sample;
+using Mediapipe.ARHealthCare.Sample;
 
-namespace Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection
+namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
 {
   public enum ModelType : int
   {
