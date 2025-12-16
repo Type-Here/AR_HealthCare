@@ -14,8 +14,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using Mediapipe.Unity;
+using Mediapipe.ARHealthCare;
 using UnityEngine.XR.ARFoundation;
+using System.Runtime.CompilerServices;
+
 
 #if UNITY_ANDROID
 using UnityEngine.Android;
@@ -163,7 +165,7 @@ namespace ARHealthCare.Input
 
         // AR Foundation should already provide the correct orientation, 
         // Eventual rotation should be handled with GetTransformationOptions.
-        public override RotationAngle rotation => RotationAngle.Rotation0;
+        public override Mediapipe.Unity.RotationAngle rotation => Mediapipe.Unity.RotationAngle.Rotation0;
 
         // Source Info
         public override string sourceName => _sourceName;

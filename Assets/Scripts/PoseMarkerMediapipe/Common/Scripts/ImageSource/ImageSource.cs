@@ -168,9 +168,9 @@ namespace Mediapipe.ARHealthCare
       return Unity.Experimental.ImageTransformationOptions.Build(shouldFlipHorizontally, shouldFlipVertically, rotation);
     }
 
-        public static implicit operator ImageSource(ARFImageSource v)
+        public static ImageSource FromARFImageSource(ARFImageSource v)
         {
-            throw new NotImplementedException();
+            return v;
         }
     }
 }
