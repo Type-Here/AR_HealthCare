@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 15003, guid: 0000000000000000e000000000000000, type: 0}
-  m_Name: Magic Leap 2
+  m_Name: Magic Leap 2 - ARM64
   m_EditorClassIdentifier: UnityEditor.dll::UnityEditor.Build.Profile.BuildProfile
   m_AssetVersion: 1
   m_BuildTarget: 13
@@ -173,8 +173,6 @@ MonoBehaviour:
         2}'
     - line: '|   - {fileID: 7409956309476867576, guid: 3fd4fc0127790db4bae83f7b77da8d45,
         type: 2}'
-    - line: '|   - {fileID: -2868301362195954248, guid: 987dbb64212518e558ec1f88d764965e,
-        type: 2}'
     - line: '|   metroInputSource: 0'
     - line: '|   wsaTransparentSwapchain: 0'
     - line: '|   m_HolographicPauseOnTrackingLoss: 1'
@@ -298,7 +296,7 @@ MonoBehaviour:
     - line: '|   useCustomGradlePropertiesTemplate: 0'
     - line: '|   useCustomGradleSettingsTemplate: 0'
     - line: '|   useCustomProguardFile: 0'
-    - line: '|   AndroidTargetArchitectures: 8'
+    - line: '|   AndroidTargetArchitectures: 2'
     - line: '|   AndroidAllowedArchitectures: -1'
     - line: '|   AndroidSplashScreenScale: 0'
     - line: '|   androidSplashScreen: {instanceID: 0}'
