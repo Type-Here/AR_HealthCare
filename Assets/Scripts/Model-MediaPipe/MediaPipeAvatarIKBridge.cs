@@ -1,5 +1,5 @@
 using UnityEngine;
-using Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection;
+using Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection;
 using Mediapipe.Tasks.Vision.PoseLandmarker;
 
 public class MediaPipeAvatarIKBridge : MonoBehaviour

@@ -90,7 +90,7 @@ namespace ARHealthCare.Trackers
                  * Map landmarks using a lookup to reduce repetitive checks and avoid repeated Count tests
                  * For Now: We only map a subset of joints needed for medical overlay
                  */
-                var desiredIds = new[] { 0, 11, 12, 13, 14, 15, 16 };
+                var desiredIds = new[] { 0, 11, 12, 13, 14, 15, 16, 25, 27, 26, 28, 23, 24 }; 
                 var landmarkMap = LandMarkPoints.Points
                                     .Where(kv => desiredIds.Contains(kv.Key))
                                     .ToDictionary(kv => kv.Key, kv => kv.Value.Replace(" ", ""));
