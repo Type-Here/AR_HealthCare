@@ -12,14 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a7858a33818d8f645a6658941cdd1823, type: 3}
   m_Name: ARHealCareAppSettings
   m_EditorClassIdentifier: Assembly-CSharp::Mediapipe.ARHealthCare.Sample.AppSettings
-  _defaultImageSource: 0
+  _defaultImageSource: 4
   _preferableInferenceMode: 0
   _assetLoaderType: 0
   _logLevel: 5
   _glogMinloglevel: 0
   _glogStderrthreshold: 2
   _glogV: 0
-  _preferredDefaultWebCamWidth: 1280
+  _preferredDefaultWebCamWidth: 640
   _defaultAvailableWebCamResolutions:
   - width: 176
     height: 144
