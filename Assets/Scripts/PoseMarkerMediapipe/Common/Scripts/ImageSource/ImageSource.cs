@@ -172,5 +172,10 @@ namespace Mediapipe.ARHealthCare
         {
             return v;
         }
+
+        public static ImageSource FromMLCameraImageSource(MLCameraImageSource v)
+        {
+            return v;
+        }
     }
 }

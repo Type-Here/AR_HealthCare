@@ -90,5 +90,7 @@ namespace Mediapipe.ARHealthCare.Sample
     public VideoSource BuildVideoSource() => new VideoSource(_availableVideoSources);
 
     public ARFImageSource BuildARFImageSource() => new ARFImageSource();
+    
+    public MLCameraImageSource BuildMLCameraImageSource() => new MLCameraImageSource();
   }
 }

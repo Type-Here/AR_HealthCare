@@ -11,6 +11,7 @@ namespace Mediapipe.ARHealthCare
     Image = 1,
     Video = 2,
     ARFImageSource = 3,
-    Unknown = 4,
+    MLCameraImageSource = 4,
+    Unknown = 5,
   }
 }

@@ -84,7 +84,9 @@ namespace Mediapipe.ARHealthCare.Sample
 
       Debug.Log("Preparing ImageSource...");
       ImageSourceProvider.Initialize(
-        _appSettings.BuildWebCamSource(), _appSettings.BuildStaticImageSource(), _appSettings.BuildVideoSource(), _appSettings.BuildARFImageSource());
+        _appSettings.BuildWebCamSource(), _appSettings.BuildStaticImageSource(), _appSettings.BuildVideoSource(),
+        _appSettings.BuildARFImageSource(), _appSettings.BuildMLCameraImageSource());
+        
       ImageSourceProvider.Switch(_appSettings.defaultImageSource);
 
       isFinished = true;

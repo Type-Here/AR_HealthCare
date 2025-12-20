@@ -14,6 +14,7 @@ namespace Mediapipe.ARHealthCare.Sample
     private static StaticImageSource _StaticImageSource;
     private static VideoSource _VideoSource;
     private static ARFImageSource _ARFImageSource;
+    private static MLCameraImageSource _MLCameraImageSource;
     public static ImageSource ImageSource { get; private set; }
 
     public static ImageSourceType CurrentSourceType
@@ -36,16 +37,22 @@ namespace Mediapipe.ARHealthCare.Sample
         {
           return ImageSourceType.ARFImageSource;
         }
+        if (ImageSource is MLCameraImageSource)
+        {
+          return ImageSourceType.MLCameraImageSource;
+        }
         return ImageSourceType.Unknown;
       }
     }
 
-    internal static void Initialize(WebCamSource webCamSource, StaticImageSource staticImageSource, VideoSource videoSource, ARFImageSource arfImageSource)
+    internal static void Initialize(WebCamSource webCamSource, StaticImageSource staticImageSource,
+              VideoSource videoSource, ARFImageSource arfImageSource, MLCameraImageSource mlcameraImageSource)
     {
       _WebCamSource = webCamSource;
       _StaticImageSource = staticImageSource;
       _VideoSource = videoSource;
       _ARFImageSource = arfImageSource;
+      _MLCameraImageSource = mlcameraImageSource;
     }
 
     public static void Switch(ImageSourceType imageSourceType)
@@ -70,6 +77,11 @@ namespace Mediapipe.ARHealthCare.Sample
         case ImageSourceType.ARFImageSource:
           {
             ImageSource = _ARFImageSource;
+            break;
+          }
+        case ImageSourceType.MLCameraImageSource:
+          {
+            ImageSource = _MLCameraImageSource;
             break;
           }
         case ImageSourceType.Unknown:
