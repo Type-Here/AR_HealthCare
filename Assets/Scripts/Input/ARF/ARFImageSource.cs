@@ -115,7 +115,7 @@ namespace ARHealthCare.Input
             _preferableDefaultWidth = preferableDefaultWidth;
         }
 
-        private static readonly object _PermissionLock = new object();
+        private static bool _IsPermissionRequestInFlight = false;
         private static bool _IsPermitted = false;
 
         // ADDED: Addition to support Bridge
@@ -244,7 +244,7 @@ namespace ARHealthCare.Input
 
         private IEnumerator GetPermission()
         {
-            lock (_PermissionLock)
+            if (_IsPermissionRequestInFlight)
             {
                 if (_IsPermitted) yield break;        
 #if UNITY_ANDROID

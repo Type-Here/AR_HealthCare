@@ -75,6 +75,14 @@ namespace ARHealthCare.Input
                 // Subscribe to the event that is called when a new frame is ready
                 cameraManager.frameReceived += OnCameraFrameReceived;
             }
+
+            Debug.Log("==================================");
+            Debug.Log("ARFCameraBridge: Inizializzato.");
+            Debug.Log(" Current CPU Mode: " + cpuMode.ToString());
+            Debug.Log(" Prefer GPU: " + preferGpu.ToString());
+            Debug.Log(" Current Camera Texture: " + (CurrentCameraTexture != null ? CurrentCameraTexture.width + "x" + CurrentCameraTexture.height : "null"));
+            Debug.Log("==================================");
+
         }
 
         void OnDisable()
@@ -289,8 +297,8 @@ namespace ARHealthCare.Input
                 {
                     // Area of the image to convert (entire image)
                     inputRect = new RectInt(0, 0, cpuImage.width, cpuImage.height),
-                    // Dimensions of the output (same resolution)
-                    outputDimensions = new Vector2Int(cpuImage.width, cpuImage.height),
+                    // Dimensions of the output image
+                    outputDimensions = new Vector2Int(outWidth, outHeight),
                     // Output format
                     outputFormat = TextureFormat.RGBA32,
                     // Often you need at least MirrorY to align with what the camera sees
