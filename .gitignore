@@ -173,4 +173,9 @@ Desktop.ini
 .plastic/
 
 ## ADDED BY USER
-**/Packages/com.github.homuler.mediapipe-0.16.3/com.github.homuler.mediapipe-0.16.3.tgz
+**/Packages/com.github.homuler.mediapipe-0.16.3/*
+# Ignore StreamingAssets folder
+**/Assets/[Ss]treamingAssets/
+# Ignore libc++_shared.so (required lib for mediapipe) and its meta file
+**/Assets/Plugins/Android/libc++_shared.so
+**/Assets/Plugins/Android/libc++_shared.so.meta
