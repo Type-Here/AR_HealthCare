@@ -7,14 +7,17 @@ public class ScrollButtons : MonoBehaviour
     public float scrollStep = 0.15f;
 
     public void ScrollUp()
-    {
-        scrollRect.verticalNormalizedPosition =
-            Mathf.Clamp01(scrollRect.verticalNormalizedPosition + scrollStep);
-    }
+{
+    //Debug.Log("ScrollUp premuto");
+    scrollRect.verticalNormalizedPosition =
+        Mathf.Clamp01(scrollRect.verticalNormalizedPosition + scrollStep);
+}
 
-    public void ScrollDown()
-    {
-        scrollRect.verticalNormalizedPosition =
-            Mathf.Clamp01(scrollRect.verticalNormalizedPosition - scrollStep);
-    }
+public void ScrollDown()
+{
+    //Debug.Log("ScrollDown premuto");
+    scrollRect.verticalNormalizedPosition =
+        Mathf.Clamp01(scrollRect.verticalNormalizedPosition - scrollStep);
+}
+
 }

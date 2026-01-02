@@ -7,15 +7,20 @@ public class PatientProblemsUI : MonoBehaviour
     public GameObject problemItemPrefab;
 
     public void AddProblem(string text)
-{
-    GameObject item = Instantiate(problemItemPrefab, contentParent);
+    {
+        GameObject item = Instantiate(problemItemPrefab, contentParent);
 
-    var tmp = item.GetComponent<TextMeshProUGUI>();
-    if (tmp != null)
-        tmp.text = "• " + text;
-    else
-        Debug.LogError("Prefab NON contiene TextMeshProUGUI!");
-}
+        TextMeshProUGUI tmp = item.GetComponentInChildren<TextMeshProUGUI>();
+
+        if (tmp != null)
+        {
+            tmp.text = text;
+        }
+        else
+        {
+            Debug.LogError("ProblemItem prefab NON contiene TextMeshProUGUI!");
+        }
+    }
 
 
     void Start()
@@ -25,7 +30,7 @@ public class PatientProblemsUI : MonoBehaviour
         AddProblem("Piedi");
         AddProblem("LOL");
         AddProblem("Il goat");
-        AddProblem("ZA PAWAAAA");
+        AddProblem("ZA PAWAAAAeeuneu cujisoa cuifdid cuhfhrfinjd");
         AddProblem("Piedi");
         AddProblem("LOL");
         AddProblem("Il goat");
