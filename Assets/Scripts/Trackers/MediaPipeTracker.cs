@@ -7,6 +7,7 @@ using Mediapipe.Tasks.Vision.PoseLandmarker;
 using Mediapipe.Tasks.Components.Containers; // Landmark Class here
 
 using System.Linq;
+using System;
 
 namespace ARHealthCare.Trackers
 {
@@ -25,6 +26,7 @@ namespace ARHealthCare.Trackers
         [Tooltip("If true, offsets the landmarks from the main camera position.")]
         public bool offsetFromCamera = true;
 
+        private bool _logManualOffset = true;
 
         // Reference to the Modified runner
         private PoseLandmarkerRunner _runner;
@@ -59,6 +61,9 @@ namespace ARHealthCare.Trackers
         {
             // 1. Read the result exposed in the Runner
             var result = _runner.LatestResult;
+
+            //if (Time.frameCount % 60 == 0)
+            //    Debug.Log($"MP IsTracked={_currentData.IsTracked} joints={_currentData.Joints.Count} t={Time.time:F2}");
 
             // 2. Security Checks
             // result.poseWorldLandmarks is a list of lists (one list for each detected person)
@@ -158,7 +163,7 @@ namespace ARHealthCare.Trackers
         /// </summary>
         /// <param name="landmark"> The MediaPipe Landmark to convert. </param>
         /// <returns> The converted Pose in Unity world space. </returns>
-        private Pose ConvertLandmark(Landmark landmark)
+        private Pose _ConvertLandmark(Landmark landmark)
         {
             // 1. Base position from landmark
             float y = landmark.y;
@@ -191,6 +196,35 @@ namespace ARHealthCare.Trackers
                 position = pos,
                 rotation = Quaternion.identity
             };
+        }
+
+        private Pose ConvertLandmark(Landmark landmark)
+        {
+            // MediaPipe world landmarks: meters, camera-centric.
+            // Common conversion: invert X (RH->LH) and often invert Z depending on convention.
+            var pCam = new Vector3(
+                invertX ? -landmark.x : landmark.x,
+                invertY ? -landmark.y : landmark.y,
+                invertZ ? -landmark.z : landmark.z
+            ) * scale;
+
+            if (_logManualOffset)
+            {
+                var whichOffset = Camera.main != null ? "camera-relative" : "manual only";
+                Debug.Log($"MediaPipeTracker: Applying {whichOffset} offset to landmarks.");
+                _logManualOffset = false;
+            }
+
+            if (Camera.main != null)
+            {
+                // Camera space -> Unity world space
+                var pWorld = Camera.main.transform.TransformPoint(pCam);
+
+                return new Pose { position = pWorld, rotation = Quaternion.identity };
+            } 
+            //else apply manual offset only
+            pCam += manualOffset;
+            return new Pose { position = pCam, rotation = Quaternion.identity };
         }
 
     }
