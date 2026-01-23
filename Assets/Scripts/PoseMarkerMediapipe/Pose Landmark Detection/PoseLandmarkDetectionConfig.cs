@@ -8,6 +8,14 @@ using System.ComponentModel;
 using Mediapipe.Tasks.Vision.PoseLandmarker;
 using Mediapipe.ARHealthCare.Sample;
 
+/**
+ * MinPoseDetectionConfidence: detector threshold deciding if a region contains a possible person/pose.
+ *     Filters initial detections (e.g., avoids mistaking a book for a person).
+ * MinPosePresenceConfidence: confidence that detected landmarks correspond to a valid **pose**.
+ *    Filters out false positives where landmarks don't form a coherent pose.
+ * MinTrackingConfidence: confidence used in temporal tracking (LIVE_STREAM):
+ *    decides when to continue tracking a person across frames versus resetting/re-detecting.
+ */
 namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
 {
   public enum ModelType : int
@@ -35,9 +43,9 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
     public Tasks.Vision.Core.RunningMode RunningMode { get; set; } = Tasks.Vision.Core.RunningMode.LIVE_STREAM;
 
     public int NumPoses { get; set; } = 1;
-    public float MinPoseDetectionConfidence { get; set; } = 0.5f;
-    public float MinPosePresenceConfidence { get; set; } = 0.5f;
-    public float MinTrackingConfidence { get; set; } = 0.5f;
+    public float MinPoseDetectionConfidence { get; set; } = 0.7f;
+    public float MinPosePresenceConfidence { get; set; } = 0.55f;
+    public float MinTrackingConfidence { get; set; } = 0.55f;
     public bool OutputSegmentationMasks { get; set; } = false;
     public string ModelName => Model.GetDescription() ?? Model.ToString();
     public string ModelPath

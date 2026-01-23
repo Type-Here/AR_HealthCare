@@ -34,12 +34,12 @@ namespace ARHealthCare.Trackers {
             // Useful to test if the rigging works
             float handHeight = 1.0f + (Mathf.Sin(_timer * 2.0f) * 0.5f);
 
-            _currentFrame.Joints["RightHand"] = new Pose {
+            _currentFrame.Joints["RightWrist"] = new Pose {
                 position = new Vector3(0.5f, handHeight, 2.0f),
                 rotation = Quaternion.identity
             };
 
-            // Add other joints here if needed (LeftHand, etc.)
+            // Add other joints here if needed (LeftWrist, etc.)
             return _currentFrame;
         }
 
