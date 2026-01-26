@@ -309,7 +309,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Core.FollowHead.HeadFollowBodyAnchor
   head: {fileID: 1567704493}
-  localPositionOffset: {x: 1, y: 0.3, z: 1}
+  localPositionOffset: {x: 0, y: 0, z: 0}
   followYawOnly: 1
 --- !u!4 &545972647
 Transform:
@@ -1067,7 +1067,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4311652260893728935, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -0.98
+      value: -4.34
       objectReference: {fileID: 0}
     - target: {fileID: 4311652260893728935, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
       propertyPath: m_LocalRotation.w
