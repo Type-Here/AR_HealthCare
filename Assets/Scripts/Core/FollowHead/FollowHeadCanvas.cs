@@ -21,7 +21,7 @@ namespace ARHealthCare.Core.FollowHead
         public Transform head;
 
         [Header("Offset in head-local space")]
-        public Vector3 localPositionOffset = new Vector3(0f, -0.1f, 1.5f);
+        public Vector3 localPositionOffset = new Vector3(0f, 0f, 2.0f);
 
         [Header("Rotation")]
         public bool useYawOnly = true;          // vertical: no pitch/roll
