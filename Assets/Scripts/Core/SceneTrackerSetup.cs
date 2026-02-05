@@ -33,10 +33,25 @@ namespace ARHealthCare.Core
 
         void Awake()
         {
+            // Auto-wiring: Try to find components in scene if not assigned in inspector
             if (trackingManager == null)
             {
-                Debug.LogError("Setup fallito: Tracking Manager non collegato!");
-                return;
+                trackingManager = FindFirstObjectByType<TrackingManager>();
+                if (trackingManager == null)
+                {
+                    Debug.LogError("SceneTrackerSetup: TrackingManager not found in scene! Please assign it in inspector or add it to the scene.");
+                    return;
+                }
+                Debug.LogWarning("SceneTrackerSetup: TrackingManager auto-wired from scene. Consider assigning it in inspector for better performance.");
+            }
+
+            if (poseRunner == null && !useMockData)
+            {
+                poseRunner = FindFirstObjectByType<PoseLandmarkerRunner>();
+                if (poseRunner != null)
+                {
+                    Debug.LogWarning("SceneTrackerSetup: PoseLandmarkerRunner auto-wired from scene. Consider assigning it in inspector.");
+                }
             }
 
             // Injection in Tracking Manager
@@ -44,22 +59,24 @@ namespace ARHealthCare.Core
 
             if (useMockData)
             {
-                // Inject Mock Tracker
+                // Inject Mock Tracker for testing/development
                 trackerToInject = new MockBodyTracker();
+                Debug.Log("SceneTrackerSetup: Injecting MockBodyTracker (test mode).");
             } else {
                 if (poseRunner != null) {
-                    // Inject MediaPipe (the only part that knows the PoseLandmarkerRunner type)
+                    // Inject MediaPipe tracker (production mode)
                     trackerToInject = new MediaPipeTracker(poseRunner);
+                    Debug.Log("SceneTrackerSetup: Injecting MediaPipeTracker.");
                 } else {
-                    Debug.LogError("Tentativo di usare MediaPipe, ma il Runner non è collegato. Usando Mock come fallback.");
+                    Debug.LogError("SceneTrackerSetup: Attempted to use MediaPipe but PoseLandmarkerRunner is not assigned or found. Falling back to MockBodyTracker.");
                     trackerToInject = new MockBodyTracker();
                 }
             }
             
-            // INJECTION: Call the clean method of the Manager
+            // Inject tracker into TrackingManager
             trackingManager.SetTracker(trackerToInject);
 
-            // Disable the Runner if we use Mock to save resources
+            // Disable MediaPipe Runner if using Mock to save resources
             if (useMockData && poseRunner != null)
             {
                  poseRunner.gameObject.SetActive(false);
