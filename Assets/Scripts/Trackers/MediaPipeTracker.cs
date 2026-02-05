@@ -34,21 +34,39 @@ namespace ARHealthCare.Trackers
         // Current tracking data
         private PatientTrackingData _currentData;
 
-        // Constructor
+        // M4.6: Cached Camera reference to avoid expensive Camera.main lookups every frame
+        private Camera _cachedMainCamera;
+
+        // M4.6: Pre-allocated dictionary to avoid GC allocations per frame
+        private Dictionary<string, Pose> _jointsCache;
+
+        /// <summary>
+        /// Constructs a new MediaPipeTracker that adapts MediaPipe PoseLandmarker results
+        /// to the ARHealthCare tracking system.
+        /// </summary>
+        /// <param name="runner">The PoseLandmarkerRunner instance to read pose data from.</param>
         public MediaPipeTracker(PoseLandmarkerRunner runner)
         {
             _runner = runner;
             _currentData = new PatientTrackingData();
-            _currentData.Joints = new Dictionary<string, Pose>();
+            // M4.6: Pre-allocate with capacity 33 (MediaPipe Pose has 33 landmarks)
+            _jointsCache = new Dictionary<string, Pose>(33);
+            _currentData.Joints = _jointsCache;
         }
 
+        /// <summary>
+        /// Initializes the MediaPipe tracker by starting the PoseLandmarkerRunner
+        /// and caching the main camera reference for performance (M4.6).
+        /// </summary>
         public void Initialize()
         {
             if (_runner != null)
             {
                 _runner.Play();
             }
-            Debug.Log("MEDIAPIPE TRACKER: Inizializzato (Task API)");
+            // M4.6: Cache Camera.main reference to avoid per-frame lookup
+            _cachedMainCamera = Camera.main;
+            Debug.Log("MediaPipeTracker: Initialized (MediaPipe Task API active).");
         }
 
         /// <summary>
@@ -59,6 +77,9 @@ namespace ARHealthCare.Trackers
         /// <returns> The latest PatientTrackingData with updated joint positions and tracking status. </returns>
         public PatientTrackingData GetTrackingData()
         {
+            // M4.6: Profiling marker for performance analysis
+            UnityEngine.Profiling.Profiler.BeginSample("MediaPipeTracker.GetTrackingData");
+
             // 1. Read the result exposed in the Runner
             var result = _runner.LatestResult;
 
@@ -70,6 +91,7 @@ namespace ARHealthCare.Trackers
             if (result.poseWorldLandmarks == null || result.poseWorldLandmarks.Count == 0)
             {
                 _currentData.IsTracked = false;
+                UnityEngine.Profiling.Profiler.EndSample();
                 return _currentData;
             }
 
@@ -83,6 +105,9 @@ namespace ARHealthCare.Trackers
             if (landmarks != null && landmarks.Count > 0)
             {
                 _currentData.IsTracked = true;
+                
+                // M4.6: Clear dictionary instead of recreating (reuse allocated memory)
+                _jointsCache.Clear();
                 
                 // --- MAPPING ---
                 // MediaPipe Pose Landmark ID Reference:
@@ -108,24 +133,26 @@ namespace ARHealthCare.Trackers
 
                     if (idx >= 0 && idx < landmarks.Count)
                     {
-                        _currentData.Joints[joint] = ConvertLandmark(landmarks[idx]);
-                    }
-                    else
-                    {
-                        // Remove stale joints if the landmark is not present anymore
-                        if (_currentData.Joints.ContainsKey(joint))
-                            _currentData.Joints.Remove(joint);
+                        _jointsCache[joint] = ConvertLandmark(landmarks[idx]);
                     }
                 }
+
+                // M2: Estimate distance and body scale for dynamic anchoring
+                EstimateDistanceAndScale(landmarks);
             }
             else
             {
                 _currentData.IsTracked = false;
             }
 
+            UnityEngine.Profiling.Profiler.EndSample();
             return _currentData;
         }
 
+        /// <summary>
+        /// Stops the MediaPipe tracking by halting the PoseLandmarkerRunner.
+        /// Called automatically when TrackingManager is destroyed or when switching trackers.
+        /// </summary>
         public void StopTracking()
         {
             if (_runner != null) _runner.Stop();
@@ -210,21 +237,55 @@ namespace ARHealthCare.Trackers
 
             if (_logManualOffset)
             {
-                var whichOffset = Camera.main != null ? "camera-relative" : "manual only";
+                var whichOffset = _cachedMainCamera != null ? "camera-relative" : "manual only";
                 Debug.Log($"MediaPipeTracker: Applying {whichOffset} offset to landmarks.");
                 _logManualOffset = false;
             }
 
-            if (Camera.main != null)
+            // M4.6: Use cached camera reference instead of Camera.main lookup
+            if (_cachedMainCamera != null)
             {
                 // Camera space -> Unity world space
-                var pWorld = Camera.main.transform.TransformPoint(pCam);
+                var pWorld = _cachedMainCamera.transform.TransformPoint(pCam);
 
                 return new Pose { position = pWorld, rotation = Quaternion.identity };
             } 
             //else apply manual offset only
             pCam += manualOffset;
             return new Pose { position = pCam, rotation = Quaternion.identity };
+        }
+
+        /// <summary>
+        /// M2: Estimates patient distance from camera and body height for dynamic scaling.
+        /// M4.6: Uses cached camera reference for optimized distance calculation.
+        /// Calculates distance using world-space converted joint positions (after ConvertLandmark).
+        /// Updates EstimatedDistance (camera-to-hips center) and EstimatedBodyHeight (extrapolated from torso).
+        /// </summary>
+        /// <param name="landmarks">The MediaPipe landmarks list (not used directly, reads from _jointsCache).</param>
+        private void EstimateDistanceAndScale(System.Collections.Generic.IReadOnlyList<Landmark> landmarks)
+        {
+            // M4.6: Use cached camera reference
+            // Calculate distance using world-space converted joints (after ConvertLandmark)
+            if (_jointsCache.ContainsKey("LeftHip") && _jointsCache.ContainsKey("RightHip") && _cachedMainCamera != null)
+            {
+                var lHipWorld = _jointsCache["LeftHip"].position;
+                var rHipWorld = _jointsCache["RightHip"].position;
+                var hipsMidWorld = 0.5f * (lHipWorld + rHipWorld);
+                
+                // Distance from camera to patient hips center (world space)
+                _currentData.EstimatedDistance = Vector3.Distance(_cachedMainCamera.transform.position, hipsMidWorld);
+            }
+
+            // Estimate body height using shoulder-to-hip vertical span (world space)
+            if (_jointsCache.ContainsKey("LeftShoulder") && _jointsCache.ContainsKey("LeftHip"))
+            {
+                var shoulderPos = _jointsCache["LeftShoulder"].position;
+                var hipPos = _jointsCache["LeftHip"].position;
+                var torsoHeight = Mathf.Abs(shoulderPos.y - hipPos.y);
+
+                // Torso is roughly 50% of total height; extrapolate full body height
+                _currentData.EstimatedBodyHeight = torsoHeight * 2.0f;
+            }
         }
 
     }
