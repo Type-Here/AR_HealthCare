@@ -1041,9 +1041,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Mediapipe.Unity.ModifiedSample.PoseLandmarkDetection.PoseLandmarkerRunner
   _bootstrapPrefab: {fileID: 968918444066301895, guid: e4884f965412cb947a9e0c9a3ab3b1fc, type: 3}
-  screen: {fileID: 1229135962}
+  screen: {fileID: 0}
   runningMode: 0
-  _poseLandmarkerResultAnnotationController: {fileID: 1006057044}
+  _poseLandmarkerResultAnnotationController: {fileID: 0}
 --- !u!1001 &1316171934
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1058,15 +1058,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4311652260893728935, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.32
+      value: 0.35
       objectReference: {fileID: 0}
     - target: {fileID: 4311652260893728935, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.77
+      value: 1.7
       objectReference: {fileID: 0}
     - target: {fileID: 4311652260893728935, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 19.2
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 4311652260893728935, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
       propertyPath: m_LocalRotation.w
@@ -1288,7 +1288,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Visuals.MedicalAvatarIK
   globalWeight: 1
-  trackingProviderBehaviour: {fileID: 0}
+  bodyWeight: 1
+  headWeight: 0.8
+  handsWeight: 1
+  feetWeight: 0.8
+  positionLerpSpeed: 12
+  rotationSlerpSpeed: 12
+  useAnchor: 1
+  anchorOffset: {x: 0, y: 0, z: 0}
+  useDynamicScaling: 1
+  expectedPatientDistance: 2
+  manualAvatarScale: 1
+  referenceBodyHeight: 1.7
+  trackingProviderBehaviour: {fileID: 1049046326}
+  logOnce: 1
+  drawGizmos: 1
 --- !u!1 &1806680259
 GameObject:
   m_ObjectHideFlags: 0
@@ -1443,6 +1457,50 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c6f3dba45281424486204a28dc2a59e, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ExitApplication
+--- !u!1 &2100000000
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2100000001}
+  - component: {fileID: 2100000002}
+  m_Layer: 0
+  m_Name: _TrackerSetup
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2100000001
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000000}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2100000002
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2100000000}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83f65f94e7e62e44b87c4a8e9b0ad227, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Core.SceneTrackerSetup
 --- !u!1001 &2613107949749013778
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2099,7 +2157,4 @@ SceneRoots:
   - {fileID: 1296499057}
   - {fileID: 643074402}
   - {fileID: 572884861}
-  - {fileID: 2613107949749013778}
-  - {fileID: 7785067491360268347}
-  - {fileID: 8923126964269396980}
-  - {fileID: 8179340021421630067}
+  - {fileID: 2100000001}
