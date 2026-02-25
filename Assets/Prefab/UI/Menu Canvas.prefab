@@ -1390,7 +1390,6 @@ GameObject:
   - component: {fileID: 2818721596835851605}
   - component: {fileID: 1616225205502673243}
   - component: {fileID: 3796012926042407841}
-  - component: {fileID: 1944143810770381219}
   - component: {fileID: 1475128050955758976}
   - component: {fileID: 6825955787239187418}
   m_Layer: 5
@@ -1466,23 +1465,6 @@ MonoBehaviour:
   m_DefaultSpriteDPI: 96
   m_DynamicPixelsPerUnit: 1
   m_PresetInfoIsWorld: 1
---- !u!114 &1944143810770381219
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7649940489458467366}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: dc42784cf147c0c48a680349fa168899, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.GraphicRaycaster
-  m_IgnoreReversedGraphics: 1
-  m_BlockingObjects: 0
-  m_BlockingMask:
-    serializedVersion: 2
-    m_Bits: 4294967295
 --- !u!114 &1475128050955758976
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1514,10 +1496,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 66392b5cd0cae8e42bcd0adc187b074b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Core.FollowHead.HeadLockedAnchor
-  head: {fileID: 0}
-  localPositionOffset: {x: 0, y: 0, z: 24}
-  useYawOnly: 1
-  yawExtraDegrees: 0
+  playerHead: {fileID: 0}
+  playerBase: {fileID: 0}
+  distance: 1.5
+  heightOffset: -0.2
+  heightFromBase: 1.4
+  followSpeed: 1
+  useBaseHeight: 0
 --- !u!1 &8644518327844716897
 GameObject:
   m_ObjectHideFlags: 0

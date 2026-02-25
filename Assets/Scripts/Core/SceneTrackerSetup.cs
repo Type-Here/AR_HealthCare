@@ -24,8 +24,11 @@ namespace ARHealthCare.Core
         public TrackingManager trackingManager;
 
         [Header("Tracker Configuration")]
-        [Tooltip("ATTIVA per usare i dati sinusoidali finti")]
+        [Tooltip("ATTIVA per usare i dati di mock")]
         public bool useMockData = false;
+
+        [Tooltip("ATTIVA per usare MediaPipeTrackerV2 (screen-space projection — segue meglio il paziente). DISATTIVA per usare MediaPipeTracker (V1, coordinate world).")]
+        public bool useV2Tracker = false;
 
         [Space]
         [Tooltip("Trascina il PoseLandmarkerRunner dalla scena qui")]
@@ -64,9 +67,18 @@ namespace ARHealthCare.Core
                 Debug.Log("SceneTrackerSetup: Injecting MockBodyTracker (test mode).");
             } else {
                 if (poseRunner != null) {
-                    // Inject MediaPipe tracker (production mode)
-                    trackerToInject = new MediaPipeTracker(poseRunner);
-                    Debug.Log("SceneTrackerSetup: Injecting MediaPipeTracker.");
+                    if (useV2Tracker)
+                    {
+                        // V2: screen-space projection (XY from normalized landmarks + Z from world landmarks)
+                        trackerToInject = new MediaPipeTrackerV2(poseRunner);
+                        Debug.Log("SceneTrackerSetup: Injecting MediaPipeTrackerV2 (screen-space projection).");
+                    }
+                    else
+                    {
+                        // V1: world landmark coordinate conversion
+                        trackerToInject = new MediaPipeTracker(poseRunner);
+                        Debug.Log("SceneTrackerSetup: Injecting MediaPipeTracker (V1, world landmarks).");
+                    }
                 } else {
                     Debug.LogError("SceneTrackerSetup: Attempted to use MediaPipe but PoseLandmarkerRunner is not assigned or found. Falling back to MockBodyTracker.");
                     trackerToInject = new MockBodyTracker();

@@ -61,7 +61,8 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
       var options = config.GetPoseLandmarkerOptions(config.RunningMode == Tasks.Vision.Core.RunningMode.LIVE_STREAM ? OnPoseLandmarkDetectionOutput : null);
       taskApi = PoseLandmarker.CreateFromOptions(options, GpuManager.GpuResources);
       var imageSource = ImageSourceProvider.ImageSource;
-  
+
+      Debug.Log("PoseLandmarkerRunner: Starting image source...");
 
       yield return imageSource.Play();
 
@@ -76,10 +77,12 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
       _textureFramePool = new Unity.Experimental.TextureFramePool(imageSource.textureWidth, imageSource.textureHeight, TextureFormat.RGBA32, 10);
 
       // NOTE: The screen will be resized later, keeping the aspect ratio.
-      screen.Initialize(imageSource);
-
-      SetupAnnotationController(_poseLandmarkerResultAnnotationController, imageSource);
-      _poseLandmarkerResultAnnotationController.InitScreen(imageSource.textureWidth, imageSource.textureHeight);
+      if(screen != null && _poseLandmarkerResultAnnotationController != null)
+      {
+        screen.Initialize(imageSource);
+         SetupAnnotationController(_poseLandmarkerResultAnnotationController, imageSource);
+        _poseLandmarkerResultAnnotationController.InitScreen(imageSource.textureWidth, imageSource.textureHeight);
+      }
 
       var transformationOptions = imageSource.GetTransformationOptions();
       var flipHorizontally = transformationOptions.flipHorizontally;
@@ -100,13 +103,16 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
 
       while (true)
       {
+        Debug.Log("PoseLandmarkerRunner: Waiting for next frame...");
         if (isPaused)
         {
+          Debug.Log("PoseLandmarkerRunner: Paused, waiting...");
           yield return new WaitWhile(() => isPaused);
         }
 
         if (!_textureFramePool.TryGetTextureFrame(out var textureFrame))
         {
+          Debug.LogWarning("PoseLandmarkerRunner: TextureFramePool is empty, waiting for next frame...");
           yield return new WaitForEndOfFrame();
           continue;
         }
@@ -153,12 +159,12 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
             if (taskApi.TryDetect(image, imageProcessingOptions, ref result))
             {
               SetLatestResult(result);
-              _poseLandmarkerResultAnnotationController.DrawNow(result);
+              _poseLandmarkerResultAnnotationController?.DrawNow(result);
             }
             else
             {
               SetLatestResult(default);
-              _poseLandmarkerResultAnnotationController.DrawNow(default);
+              _poseLandmarkerResultAnnotationController?.DrawNow(default);
             }
             DisposeAllMasks(result);
             break;
@@ -167,17 +173,18 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
             if (taskApi.TryDetectForVideo(image, GetCurrentTimestampMillisec(), imageProcessingOptions, ref result))
             {
               SetLatestResult(result);
-              _poseLandmarkerResultAnnotationController.DrawNow(result);
+              _poseLandmarkerResultAnnotationController?.DrawNow(result);
             }
             else
             {
               SetLatestResult(default);
-              _poseLandmarkerResultAnnotationController.DrawNow(default);
+              _poseLandmarkerResultAnnotationController?.DrawNow(default);
             }
             DisposeAllMasks(result);
             break;
 
           case Tasks.Vision.Core.RunningMode.LIVE_STREAM:
+            Debug.Log($"PoseLandmarkerRunner: Sending image for detection at timestamp {GetCurrentTimestampMillisec()}ms");
             taskApi.DetectAsync(image, GetCurrentTimestampMillisec(), imageProcessingOptions);
             break;
         }
@@ -189,8 +196,10 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
       // ADDED: Keep the latest result accessible and notify subscribers
       // Note: Consumers should only rely on landmarks; segmentation masks are disposed after.
       SetLatestResult(result);
-
-      _poseLandmarkerResultAnnotationController.DrawLater(result);
+#if AR_HEALTHCARE_DEBUG
+      Debug.Log($"PoseLandmarkerRunner: Received new result with {result.poseWorldLandmarks?.Count ?? 0} pose(s) at timestamp {timestamp}ms");
+#endif
+      _poseLandmarkerResultAnnotationController?.DrawLater(result);
       DisposeAllMasks(result);
     }
 

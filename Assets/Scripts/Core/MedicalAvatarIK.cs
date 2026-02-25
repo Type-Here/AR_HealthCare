@@ -113,12 +113,16 @@ namespace ARHealthCare.Visuals
 
         private void OnAnimatorIK(int layerIndex)
         {
+            // Debug.Log("OnAnimatorIK called");
+
             if (_animator == null || trackingProvider == null) return;
 
             // M4.6: Profiling marker for performance analysis
             UnityEngine.Profiling.Profiler.BeginSample("MedicalAvatarIK.OnAnimatorIK");
 
             var data = trackingProvider.GetPose();
+
+            // Debug.Log($"Tracking data received. Joints count: {data.Joints?.Count ?? 0}, EstimatedDistance: {data.EstimatedDistance:F2}m, EstimatedBodyHeight: {data.EstimatedBodyHeight:F2}m");
             
             // M4.7: Tracking loss handling
             if (!data.IsTracked || data.Joints == null || data.Joints.Count == 0)
@@ -193,12 +197,69 @@ namespace ARHealthCare.Visuals
             UnityEngine.Profiling.Profiler.EndSample();
         }
 
+        private void ApplyBodyRoot(PatientTrackingData data)
+        {
+            var joints = data.Joints;
+            if (joints == null) return;
+            if (!joints.TryGetValue("LeftHip", out Pose lHip) ||
+                !joints.TryGetValue("RightHip", out Pose rHip) ||
+                !joints.TryGetValue("LeftShoulder", out Pose lShoulder) ||
+                !joints.TryGetValue("RightShoulder", out Pose rShoulder))
+                return;
+
+            Vector3 hipsMid = (lHip.position + rHip.position) * 0.5f;
+            Vector3 shoulderMid = (lShoulder.position + rShoulder.position) * 0.5f;
+
+            // Anchor: position avatar root on hips
+            Vector3 targetRootPos = hipsMid + anchorOffset;
+            transform.position = Vector3.Lerp(transform.position, targetRootPos,
+                                              Time.deltaTime * positionLerpSpeed);
+
+            // Rotate torso
+            // anatomical up: from hips to shoulder (world space already converted)
+            Vector3 anatomicalUp = (shoulderMid - hipsMid).normalized;
+
+            // Sanity check: if up vector is near zero or degenerate, skip rotation to avoid NaNs
+            if (anatomicalUp.sqrMagnitude < 0.01f) return;
+
+            // Null-guard: if no camera, skip rotation this frame
+            if (_cachedMainCamera == null)
+            {
+                _cachedMainCamera = Camera.main;
+                if (_cachedMainCamera == null) return;
+            }
+
+            // forward: avatar faces toward the camera.
+            // Project (camera → hips) onto the plane perpendicular to anatomicalUp.
+            Vector3 toCam = (_cachedMainCamera.transform.position - hipsMid).normalized;
+            Vector3 forwardRaw = toCam - Vector3.Dot(toCam, anatomicalUp) * anatomicalUp;
+
+            if (forwardRaw.sqrMagnitude < 0.01f)
+            {
+                // Degenerate (patient directly above/below camera) → project camera.forward
+                forwardRaw = _cachedMainCamera.transform.forward;
+                forwardRaw = forwardRaw - Vector3.Dot(forwardRaw, anatomicalUp) * anatomicalUp;
+            }
+
+            Vector3 anatomicalForward = forwardRaw.normalized;
+
+            // LookRotation(forward, up) → stable quaternion, no cross product
+            Quaternion targetRot = Quaternion.LookRotation(anatomicalForward, anatomicalUp);
+
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRot,
+                                                  Time.deltaTime * rotationSlerpSpeed);
+
+            // Sync body IK with tranform (Animator.bodyPosition relative to root)
+            _animator.bodyPosition = transform.position;
+            _animator.bodyRotation = transform.rotation;
+        }
+
         /// <summary>
         /// Positions and orients the avatar root body to match the patient's torso.
         /// Uses hips for position and hips+shoulders for orientation.
         /// M2: Implements dynamic spatial anchoring with auto-scaling based on estimated distance and body size.
         /// </summary>
-        private void ApplyBodyRoot(PatientTrackingData data)
+        private void _ApplyBodyRoot(PatientTrackingData data)
         {
             // Need hips and shoulders to orient the torso reliably
             bool hasLH = TryGet(data, "LeftHip", out var lHip);
@@ -253,28 +314,29 @@ namespace ARHealthCare.Visuals
                 // M2: Improved torso orientation using robust coordinate frame construction
                 var shouldersMid = 0.5f * (lSh.position + rSh.position);
                 
-                // Right vector: left->right shoulder defines lateral axis (normalized for stability)
+                // Right vector: left shoulder → right shoulder (camera-right axis for frontal pose)
                 var right = (rSh.position - lSh.position).normalized;
                 
-                // Up vector: hips->shoulders center (torso spine direction)
+                // Up vector: hips center → shoulders center (spine direction)
                 var up = (shouldersMid - hipsMid).normalized;
                 
-                // Forward vector: perpendicular to right and up (torso facing direction)
-                // M4.6: Use sqrMagnitude instead of magnitude for performance (no sqrt)
-                var forward = Vector3.Cross(right, up);
+                // Forward vector: Cross(up, right) points TOWARD the camera (avatar faces camera).
+                // Note: Cross(right, up) would point AWAY — wrong for AR overlay.
+                var forward = Vector3.Cross(up, right);
                 
                 if (forward.sqrMagnitude > 0.000001f && up.sqrMagnitude > 0.000001f)
                 {
                     forward.Normalize();
-                    // Re-orthogonalize right to ensure perfect orthonormal basis
+                    // Re-orthogonalize right for perfect orthonormal basis
                     right = Vector3.Cross(up, forward).normalized;
                     targetRot = Quaternion.LookRotation(forward, up);
                 }
                 else if (_cachedMainCamera != null)
                 {
-                    // M4.6: Use cached camera reference
-                    // Fallback: use camera forward if torso vectors are degenerate
-                    targetRot = Quaternion.LookRotation(_cachedMainCamera.transform.forward, Vector3.up);
+                    // Fallback: avatar faces camera when torso vectors are degenerate
+                    targetRot = Quaternion.LookRotation(
+                        (_cachedMainCamera.transform.position - hipsMid).normalized,
+                        Vector3.up);
                 }
             }
 
@@ -282,8 +344,18 @@ namespace ARHealthCare.Visuals
             float pT = 1f - Mathf.Exp(-positionLerpSpeed * Time.deltaTime);
             float rT = 1f - Mathf.Exp(-rotationSlerpSpeed * Time.deltaTime);
 
-            _animator.bodyPosition = Vector3.Lerp(_animator.bodyPosition, targetPos, pT * bodyWeight * globalWeight);
-            _animator.bodyRotation = Quaternion.Slerp(_animator.bodyRotation, targetRot, rT * bodyWeight * globalWeight);
+            float w = bodyWeight * globalWeight;
+
+            // Move the avatar root transform directly to the hips world position.
+            // This is the primary mechanism for AR overlay positioning —
+            // animator.bodyPosition alone is not sufficient when the Animator has
+            // root motion or a non-identity base pose.
+            transform.position = Vector3.Lerp(transform.position, targetPos, pT * w);
+            //transform.rotation = Quaternion.Slerp(transform.rotation, targetRot, rT * w);
+
+            // Keep animator body in sync with transform for IK solver consistency.
+            _animator.bodyPosition = transform.position;
+            //_animator.bodyRotation = transform.rotation;
         }
 
         /// <summary>

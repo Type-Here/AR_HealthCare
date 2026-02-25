@@ -32,7 +32,8 @@ namespace ARHealthCare.UI
             Debug.Log("AR Environment Starting...");
             uiTracking.StartTrackingFromCore();
             mainMenuFade.FadeOut();
-            UIButtonsCanvas.SetActive(true);
+            mainMenuFade.gameObject.SetActive(false);
+            //UIButtonsCanvas.SetActive(true);
         }
 
         // =========================
@@ -43,6 +44,8 @@ namespace ARHealthCare.UI
             Debug.Log("START SIMULATION");
 
             mainMenuFade.FadeOut();
+            mainMenuFade.gameObject.SetActive(false);
+            patientInfoFade.gameObject.SetActive(true);
             patientInfoFade.FadeIn();
             UIButtonsCanvas.SetActive(true);
         }
@@ -57,8 +60,12 @@ namespace ARHealthCare.UI
             if (patientInfoFade.isActiveAndEnabled)
             {
                 patientInfoFade.FadeOut();
+                patientInfoFade.gameObject.SetActive(false);
+
             } else if (mainMenuFade.isActiveAndEnabled) {
                 mainMenuFade.FadeOut();
+                mainMenuFade.gameObject.SetActive(false);
+                
             } else {
                 mainMenuFade.gameObject.SetActive(true);
                 mainMenuFade.canvasGroup.alpha = 1f;

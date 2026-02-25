@@ -40,7 +40,7 @@ namespace ARHealthCare.Core
         public void SetTracker(IBodyTracker tracker)
         {
             // Stop previous tracker to release resources
-            _currentTracker?.StopTracking();
+            // _currentTracker?.StopTracking();
 
             _currentTracker = tracker;
             _currentTracker.Initialize();
@@ -56,6 +56,10 @@ namespace ARHealthCare.Core
         /// <returns>The latest PatientTrackingData with joints, distance, and tracking status.</returns>
         public PatientTrackingData GetPose()
         {
+            if (_lastFrame == null)
+            {
+                Debug.LogWarning("TrackingManager: GetPose() called but no tracking data available yet.");
+            }
             return _lastFrame ?? new PatientTrackingData();
         }
 

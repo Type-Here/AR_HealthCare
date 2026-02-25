@@ -1,11 +1,11 @@
 using UnityEngine;
-// using UnityEngine.Animations.Rigging; // Se serve accedere al Rig Builder via codice
+// using UnityEngine.Animations.Rigging; // if you want to use Unity's built-in Rigging system instead of custom IK
 
 public class MediaPipeAvatarIK : MonoBehaviour
 {
     [Header("Impostazioni Generali")]
-    public float movementScale = 1.0f; // Aumentare se l'avatar si muove poco
-    public Vector3 globalOffset;       // Per spostare l'avatar nello spazio
+    public float movementScale = 1.0f;
+    public Vector3 globalOffset;       // To move the avatar
 
     [Header("Target IK (Mani e Piedi)")]
     public Transform leftHandTarget;
@@ -22,56 +22,63 @@ public class MediaPipeAvatarIK : MonoBehaviour
     [Header("Hint IK (Testa)")]
     public Transform headTarget;
 
-    // Riferimento opzionale per muovere l'intero corpo (Root/Hips)
-    // Se non si usa, l'avatar stara' fermo sul posto e muovera' solo gli arti
+    // Optional reference to move the entire body (Root/Hips)
+    // If not used, the avatar will stay in place and only move limbs
     public Transform hipsBone; 
 
-    // Questa funzione viene chiamata dallo script con i punti presi dalla camera del Magic Leap 2
+
+    // Function called by the script that receives the landmarks from the Magic Leap 2 camera
     public void UpdatePose(Vector3[] landmarks)
     {
-        // Controllo di sicurezza: MediaPipe deve dare 33 punti
+        Debug.Log("Updating Avatar Pose with MediaPipe Landmarks...");
+        Debug.Log($"Received {landmarks.Length} landmarks.");
+        Debug.Log($"Example Landmark (Nose): {landmarks[0]}");
+
+
+        // Check if we have enough landmarks (MediaPipe Pose provides 33 landmarks)
         if (landmarks == null || landmarks.Length < 33) return;
 
-        // --- MAPPARE I PUNTI ---
+        // --- MAPPING ---
         
-        // 1. BRACCIA
-        // Sinistra: Polso (15) e Gomito (13)
+        // 1. ARMS
+        // Left: Wrist (15) and Elbow (13)
         UpdateIKPoint(leftHandTarget, landmarks[15]);
         UpdateIKPoint(leftElbowHint, landmarks[13]);
 
-        // Destra: Polso (16) e Gomito (14)
+        // Right: Wrist (16) and Elbow (14)
         UpdateIKPoint(rightHandTarget, landmarks[16]);
         UpdateIKPoint(rightElbowHint, landmarks[14]);
 
-        // 2. GAMBE
-        // Sinistra: Caviglia (27) e Ginocchio (25)
+        // 2. LEGS
+        // Left: Ankle (27) and Knee (25)
         UpdateIKPoint(leftFootTarget, landmarks[27]);
         UpdateIKPoint(leftKneeHint, landmarks[25]);
 
-        // Destra: Caviglia (28) e Ginocchio (26)
+        // Right: Ankle (28) and Knee (26)
         UpdateIKPoint(rightFootTarget, landmarks[28]);
         UpdateIKPoint(rightKneeHint, landmarks[26]);
 
-        // 3. POSIZIONE CORPO
-        // Calcoliamo il centro dei fianchi (media tra punto 23 e 24)
+        // 3. BODY POSITION (Hips)
+        // Center of hips (average of left and right hip, points 23 and 24)
         if (hipsBone != null)
         {
             Vector3 hipsPos = (landmarks[23] + landmarks[24]) * 0.5f;
             hipsBone.position = (hipsPos * movementScale) + globalOffset;
         }
 
-        // 4. POSIZIONE Testa
-        UpdateIKPoint(headTarget, landmarks[0]); // Landmark 0 e' il naso
+        // 4. Head Position (Nose - Landmark 0)
+        UpdateIKPoint(headTarget, landmarks[0]); // Landmark 0 = Nose
     }
 
-    // Funzione helper per applicare posizione, scala e offset
+    // Helper function to apply position, scale, and offset
     void UpdateIKPoint(Transform target, Vector3 rawPos)
     {
         if (target != null)
         {
-            // Applichiamo la posizione.
-            // NOTA: Se il modello si muove al contrario, invertire assi qui
-            // Es: new Vector3(-rawPos.x, -rawPos.y, rawPos.z)
+            // Apply scaling and global offset to the raw position from MediaPipe
+            // NOTE: Depending on the coordinate system of your avatar and the one used by MediaPipe, 
+            // you might need to swap axes or invert some of them. Adjust as necessary.
+            // Eg: new Vector3(-rawPos.x, -rawPos.y, rawPos.z)
             target.position = (rawPos * movementScale) + globalOffset;
         }
     }
