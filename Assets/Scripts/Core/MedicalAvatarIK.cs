@@ -41,6 +41,8 @@ namespace ARHealthCare.Visuals
         public bool useAnchor = true;
         [Tooltip("Offset from patient hips to avatar root (meters).")]
         public Vector3 anchorOffset = Vector3.zero;
+        [Tooltip("Quick vertical shift of the whole avatar (positive = up). Use this to compensate for the avatar appearing too low/high relative to the real body.")]
+        public float verticalBodyOffset = 0.3f;
         
         [Header("Dynamic Scaling (M2)")]
         [Tooltip("Enable dynamic avatar scaling based on estimated patient distance and body size.")]
@@ -53,12 +55,24 @@ namespace ARHealthCare.Visuals
         [Tooltip("Reference body height for scale calculation (average human ~1.7m).")]
         public float referenceBodyHeight = 1.7f;
 
+        [Header("Arm / Leg IK")]
+        [Tooltip("Weight for elbow pole-vector hints (1 = full influence on bend direction).")]
+        [Range(0, 1)] public float elbowHintWeight = 1.0f;
+        [Tooltip("Extra outward offset (metres) added to the elbow hint when the arm is nearly straight, " +
+                 "to prevent the solver from picking the wrong bend direction. " +
+                 "Increase if elbow bends inward when arm is extended. Default: 0.15.")]
+        // Up to 0.3 if still internal elbow flipping occurs during extension; 
+        // Reduce if the elbow appears too biased outward during normal bending.
+        public float elbowBiasStrength = 0.15f;
+        [Tooltip("Weight for knee pole-vector hints.")]
+        [Range(0, 1)] public float kneeHintWeight = 1.0f;
+
         [Header("Tracking Provider")]
         [SerializeField] private MonoBehaviour trackingProviderBehaviour;
         private ITrackingProvider trackingProvider;
 
         [Header("Debug")]
-        public bool logOnce = false;
+        public bool logOnce = true;
         private bool _logged;
         [Tooltip("Draw debug gizmos in Scene view for anchor and key landmarks.")]
         public bool drawGizmos = true;
@@ -111,19 +125,26 @@ namespace ARHealthCare.Visuals
                 Debug.LogError("MedicalAvatarIK: trackingProviderBehaviour is null or does not implement ITrackingProvider. Assign a TrackingManager in the inspector.");
         }
 
+
+        /// <summary>
+        /// Unity callback for IK updates. Called by the Animator after it evaluates the animation pose.
+        /// </summary>
+        /// <param name="layerIndex"> The index of the Animator layer being evaluated (not used here).</param>
         private void OnAnimatorIK(int layerIndex)
         {
             // Debug.Log("OnAnimatorIK called");
 
             if (_animator == null || trackingProvider == null) return;
-
+#if  AR_HEALTHCARE_DEBUG
             // M4.6: Profiling marker for performance analysis
             UnityEngine.Profiling.Profiler.BeginSample("MedicalAvatarIK.OnAnimatorIK");
-
+#endif
             var data = trackingProvider.GetPose();
 
-            // Debug.Log($"Tracking data received. Joints count: {data.Joints?.Count ?? 0}, EstimatedDistance: {data.EstimatedDistance:F2}m, EstimatedBodyHeight: {data.EstimatedBodyHeight:F2}m");
-            
+#if  AR_HEALTHCARE_DEBUG
+            Debug.Log($"Tracking data received. Joints count: {data.Joints?.Count ?? 0}," + 
+            $" EstimatedDistance: {data.EstimatedDistance:F2}m, EstimatedBodyHeight: {data.EstimatedBodyHeight:F2}m");
+#endif
             // M4.7: Tracking loss handling
             if (!data.IsTracked || data.Joints == null || data.Joints.Count == 0)
             {
@@ -140,8 +161,9 @@ namespace ARHealthCare.Visuals
                     }
                 }
                 // else: maintain last position (freeze)
-                
+ #if AR_HEALTHCARE_DEBUG               
                 UnityEngine.Profiling.Profiler.EndSample();
+#endif
                 return;
             }
             
@@ -178,8 +200,8 @@ namespace ARHealthCare.Visuals
             ApplyBodyRoot(data);
 
             // --- HANDS ---
-            ApplyGoalIK(AvatarIKGoal.LeftHand,  "LeftWrist",  data, handsWeight);
-            ApplyGoalIK(AvatarIKGoal.RightHand, "RightWrist", data, handsWeight);
+            ApplyHandIK(AvatarIKGoal.LeftHand,  "LeftWrist",  "LeftElbow",  data, handsWeight);
+            ApplyHandIK(AvatarIKGoal.RightHand, "RightWrist", "RightElbow", data, handsWeight);
 
             // --- FEET ---
             ApplyGoalIK(AvatarIKGoal.LeftFoot,  "LeftAnkle",  data, feetWeight);
@@ -188,13 +210,16 @@ namespace ARHealthCare.Visuals
             // --- HEAD / LOOK ---
             ApplyHeadLook(data);
 
-            // Optional: elbows/knees hints (helps stability)
-            ApplyHintIK(AvatarIKHint.LeftElbow,  "LeftElbow",  data, 0.4f);
-            ApplyHintIK(AvatarIKHint.RightElbow, "RightElbow", data, 0.4f);
-            ApplyHintIK(AvatarIKHint.LeftKnee,   "LeftKnee",   data, 0.4f);
-            ApplyHintIK(AvatarIKHint.RightKnee,  "RightKnee",  data, 0.4f);
-
+            // Elbow hints — use enhanced version with outward anatomical bias.
+            ApplyElbowHint(AvatarIKHint.LeftElbow,  "LeftElbow",  "LeftShoulder",  "LeftWrist",  data, elbowHintWeight, isLeft: true);
+            ApplyElbowHint(AvatarIKHint.RightElbow, "RightElbow", "RightShoulder", "RightWrist", data, elbowHintWeight, isLeft: false);
+            // Knee hints — standard pole-vector.
+            ApplyHintIK(AvatarIKHint.LeftKnee,  "LeftKnee",  data, kneeHintWeight);
+            ApplyHintIK(AvatarIKHint.RightKnee, "RightKnee", data, kneeHintWeight);
+            
+#if  AR_HEALTHCARE_DEBUG 
             UnityEngine.Profiling.Profiler.EndSample();
+#endif
         }
 
         private void ApplyBodyRoot(PatientTrackingData data)
@@ -211,7 +236,7 @@ namespace ARHealthCare.Visuals
             Vector3 shoulderMid = (lShoulder.position + rShoulder.position) * 0.5f;
 
             // Anchor: position avatar root on hips
-            Vector3 targetRootPos = hipsMid + anchorOffset;
+            Vector3 targetRootPos = hipsMid + anchorOffset + Vector3.up * verticalBodyOffset;
             transform.position = Vector3.Lerp(transform.position, targetRootPos,
                                               Time.deltaTime * positionLerpSpeed);
 
@@ -229,7 +254,7 @@ namespace ARHealthCare.Visuals
                 if (_cachedMainCamera == null) return;
             }
 
-            // forward: avatar faces toward the camera.
+            // Forward: avatar faces toward the camera.
             // Project (camera → hips) onto the plane perpendicular to anatomicalUp.
             Vector3 toCam = (_cachedMainCamera.transform.position - hipsMid).normalized;
             Vector3 forwardRaw = toCam - Vector3.Dot(toCam, anatomicalUp) * anatomicalUp;
@@ -279,7 +304,7 @@ namespace ARHealthCare.Visuals
                 if (data.EstimatedBodyHeight > 0.5f)
                 {
                     scaleFactor = data.EstimatedBodyHeight / referenceBodyHeight;
-                    scaleFactor = Mathf.Clamp(scaleFactor, 0.5f, 2.0f);
+                    scaleFactor = Mathf.Clamp(scaleFactor, 0.5f, 2.0f) + 0.1f; // Add small buffer to prevent underscaling (empirical)
                 }
 
                 // Apply scale smoothly to avoid jitter
@@ -359,14 +384,58 @@ namespace ARHealthCare.Visuals
         }
 
         /// <summary>
-        /// Applies IK to a specific AvatarIKGoal (hand/foot).
-        /// Uses the jointKey to look up the corresponding Pose in the tracking data.
-        /// Differs from ApplyHintIK in that it sets position and rotation for goals.
+        /// Applies hand IK position + rotation derived from the forearm direction (elbow→wrist).
+        /// The rotation gives the 2-bone IK solver a full arm configuration constraint,
+        /// producing correct elbow bending even at large angles.
+        /// Falls back to position-only IK if the elbow landmark is unavailable.
         /// </summary>
-        /// <param name="goal"></param>
-        /// <param name="jointKey"></param>
-        /// <param name="data"></param>
-        /// <param name="weight"></param>
+        private void ApplyHandIK(AvatarIKGoal goal, string wristKey, string elbowKey,
+                                 PatientTrackingData data, float weight)
+        {
+            if (!TryGet(data, wristKey, out var wristPose))
+            {
+                _animator.SetIKPositionWeight(goal, 0);
+                _animator.SetIKRotationWeight(goal, 0);
+                return;
+            }
+
+            // ── position (same smoothing as ApplyGoalIK) ──────────────────────
+            Vector3 targetPos = wristPose.position;
+            string cacheKey = $"{goal}_{wristKey}";
+
+            if (_lastValidPositions.TryGetValue(cacheKey, out Vector3 lastPos))
+            {
+                float movementDist = Vector3.Distance(targetPos, lastPos);
+                if (movementDist < movementDeadZone)
+                    targetPos = lastPos;
+                else if (useAdaptiveSmoothing)
+                {
+                    float velocity = movementDist / Time.deltaTime;
+                    float normalizedVelocity = Mathf.Clamp01(velocity / maxVelocity);
+                    float adaptiveSpeed = Mathf.Lerp(positionLerpSpeed * 0.5f, positionLerpSpeed * 1.5f, normalizedVelocity);
+                    float alpha = 1f - Mathf.Exp(-adaptiveSpeed * Time.deltaTime);
+                    targetPos = Vector3.Lerp(lastPos, targetPos, alpha);
+                }
+            }
+            _lastValidPositions[cacheKey] = targetPos;
+
+            float w = Mathf.Clamp01(globalWeight * weight);
+            if (_isRecoveringFromLoss)
+                w *= Mathf.Clamp01(_recoveryBlendTime / RECOVERY_BLEND_DURATION);
+
+            _animator.SetIKPositionWeight(goal, w);
+            _animator.SetIKPosition(goal, targetPos);
+
+            // SetIKRotation controls WRIST TWIST, not elbow bend in Unity Humanoid IK.
+            // Using it with forearm direction causes elbow hyperextension artefacts when
+            // the arm is straight. Elbow bend direction is controlled exclusively via
+            // SetIKHintPosition (ApplyElbowHint below). Keep rotation weight at zero.
+            _animator.SetIKRotationWeight(goal, 0);
+        }
+
+        /// <summary>
+        /// Applies IK to a specific AvatarIKGoal (hand/foot) — position only.
+        /// </summary>
         private void ApplyGoalIK(AvatarIKGoal goal, string jointKey, PatientTrackingData data, float weight)
         {
             if (!TryGet(data, jointKey, out var pose))
@@ -424,11 +493,74 @@ namespace ARHealthCare.Visuals
         }
         
         /// <summary>
-        /// Applies IK hint position to a specific AvatarIKHint (elbow/knee).
-        /// Uses the jointKey to look up the corresponding Pose in the tracking data.
-        /// Differs from ApplyGoalIK in that it only sets hint position.
+        /// Elbow pole-vector hint with anatomical outward bias.
+        ///
+        /// Problem with plain elbow landmark as hint:
+        ///   When the arm is nearly straight the landmark is nearly collinear with
+        ///   shoulder and wrist → the pole vector has no directional preference →
+        ///   the solver picks the wrong side (inward bend / hyperextension).
+        ///
+        /// Fix:
+        ///   Compute the perpendicular deviation of the elbow from the shoulder→wrist
+        ///   axis. When that deviation is small (arm straight), add an outward bias
+        ///   so the hint always pushes the elbow in the anatomically correct direction.
+        ///
+        ///   isLeft=true  → bias pushes elbow outward to patient's left  (lateral)
+        ///   isLeft=false → bias pushes elbow outward to patient's right (lateral)
         /// </summary>
-                
+        private void ApplyElbowHint(AvatarIKHint hint,
+                                    string elbowKey, string shoulderKey, string wristKey,
+                                    PatientTrackingData data, float weight, bool isLeft)
+        {
+            if (!TryGet(data, elbowKey, out var elbowPose))
+            {
+                _animator.SetIKHintPositionWeight(hint, 0);
+                return;
+            }
+
+            Vector3 hintPos = elbowPose.position;
+
+            // Compute outward bias only if we have shoulder + wrist
+            if (TryGet(data, shoulderKey, out var shoulderPose) &&
+                TryGet(data, wristKey,    out var wristPose))
+            {
+                Vector3 armAxis    = (wristPose.position - shoulderPose.position);
+                float   armLen     = armAxis.magnitude;
+                if (armLen > 0.001f)
+                {
+                    armAxis /= armLen;
+
+                    // Project elbow onto arm axis → find perpendicular deviation
+                    Vector3 toElbow  = elbowPose.position - shoulderPose.position;
+                    float   proj     = Vector3.Dot(toElbow, armAxis);
+                    Vector3 onAxis   = shoulderPose.position + armAxis * proj;
+                    float   perpDist = Vector3.Distance(elbowPose.position, onAxis);
+
+                    // Straightness: 1 when arm is fully extended, 0 when clearly bent.
+                    // We consider the arm "straight" when perpendicular deviation < 8 cm.
+                    float straightness = 1f - Mathf.Clamp01(perpDist / 0.08f);
+
+                    // Bias direction: lateral outward from the arm axis.
+                    // Cross(armAxis, worldUp) → points to patient's left for both arms;
+                    // flip sign for the right arm to keep it anatomically correct.
+                    Vector3 biasDir = Vector3.Cross(armAxis, Vector3.up);
+                    if (biasDir.sqrMagnitude < 0.001f)            // arm pointing straight up/down
+                        biasDir = Vector3.Cross(armAxis, Vector3.forward);
+                    biasDir.Normalize();
+                    if (!isLeft) biasDir = -biasDir;              // mirror for right arm
+
+                    hintPos = elbowPose.position + biasDir * (elbowBiasStrength * straightness);
+                }
+            }
+
+            _animator.SetIKHintPositionWeight(hint, Mathf.Clamp01(globalWeight * weight));
+            _animator.SetIKHintPosition(hint, hintPos);
+        }
+
+        /// <summary>
+        /// Applies IK hint position to a specific AvatarIKHint (knee/generic).
+        /// Uses the jointKey to look up the corresponding Pose in the tracking data.
+        /// </summary>
         private void ApplyHintIK(AvatarIKHint hint, string jointKey, PatientTrackingData data, float weight)
         {
             if (!TryGet(data, jointKey, out var pose))
