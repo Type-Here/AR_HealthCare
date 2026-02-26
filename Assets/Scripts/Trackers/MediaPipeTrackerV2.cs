@@ -28,16 +28,18 @@ namespace ARHealthCare.Trackers
     public class MediaPipeTrackerV2 : IBodyTracker
     {
         [Header("Depth Settings")]
-        [Tooltip("Estimated distance from camera to patient (metres). Used as the depth baseline for hips; other joints are offset relative to it using world landmark Z.")]
+        [Tooltip("Estimated distance from camera to patient (metres)." +
+        " Used as the depth baseline for hips; other joints are offset relative to it using world landmark Z.")]
         public float baseDepth = 2.0f;
 
-        [Tooltip("Vertical offset applied to screen-Y before projecting (positive = shift landmark up on screen). Useful to compensate for camera tilt or avatar height mismatch.")]
+        [Tooltip("Vertical offset applied to screen-Y before projecting (positive = shift landmark up on screen)." 
+                +" Useful to compensate for camera tilt or avatar height mismatch.")]
         public float screenYOffset = 0f;
 
         [Header("Debug")]
         public bool verbose = false;
 
-        // ── internals ─────────────────────────────────────────────────────────
+        //Internals
         private readonly PoseLandmarkerRunner _runner;
         private PatientTrackingData           _currentData;
         private readonly Dictionary<string, Pose> _jointsCache;
@@ -59,7 +61,11 @@ namespace ARHealthCare.Trackers
             (25, "LeftKnee"),
             (26, "RightKnee"),
             (27, "LeftAnkle"),
-            (28, "RightAnkle"),
+            (28, "RightAnkle")
+            //(2, "LeftEye"),
+            //(5, "RightEye"),
+            //(31, "LeftFootIndex"),
+            //(32, "RightFootIndex"),
         };
 
         public MediaPipeTrackerV2(PoseLandmarkerRunner runner)
