@@ -44,8 +44,8 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
 
     public int NumPoses { get; set; } = 1;
     public float MinPoseDetectionConfidence { get; set; } = 0.7f;
-    public float MinPosePresenceConfidence { get; set; } = 0.55f;
-    public float MinTrackingConfidence { get; set; } = 0.55f;
+    public float MinPosePresenceConfidence { get; set; } = 0.6f;
+    public float MinTrackingConfidence { get; set; } = 0.6f;
     public bool OutputSegmentationMasks { get; set; } = false;
     public string ModelName => Model.GetDescription() ?? Model.ToString();
     public string ModelPath
