@@ -13,7 +13,6 @@ using Mediapipe.ARHealthCare.Sample;
 using ARHealthCare.Input;
 using UnityEngine.Scripting;
 using Mediapipe.Unity;
-
 namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
 {
   public class PoseLandmarkerRunner : VisionTaskApiRunner<PoseLandmarker>
@@ -103,7 +102,9 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
 
       while (true)
       {
+#if AR_HEALTHCARE_DEBUG
         Debug.Log("PoseLandmarkerRunner: Waiting for next frame...");
+#endif
         if (isPaused)
         {
           Debug.Log("PoseLandmarkerRunner: Paused, waiting...");
@@ -184,7 +185,9 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
             break;
 
           case Tasks.Vision.Core.RunningMode.LIVE_STREAM:
+#if AR_HEALTHCARE_DEBUG
             Debug.Log($"PoseLandmarkerRunner: Sending image for detection at timestamp {GetCurrentTimestampMillisec()}ms");
+#endif
             taskApi.DetectAsync(image, GetCurrentTimestampMillisec(), imageProcessingOptions);
             break;
         }
