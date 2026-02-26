@@ -30,10 +30,10 @@ namespace ARHealthCare.UI
         public void ARStartEnvironment()
         {
             Debug.Log("AR Environment Starting...");
-            uiTracking.StartTrackingFromCore();
+            uiTracking.StartTrackingFromCore(); // Activate tracking GO before fading out the menu to minimize delay
             mainMenuFade.FadeOut();
             mainMenuFade.gameObject.SetActive(false);
-            //UIButtonsCanvas.SetActive(true);
+            UIButtonsCanvas.SetActive(true);
         }
 
         // =========================
@@ -41,8 +41,6 @@ namespace ARHealthCare.UI
         // =========================
         public void StartPatientInfo()
         {
-            Debug.Log("START SIMULATION");
-
             mainMenuFade.FadeOut();
             mainMenuFade.gameObject.SetActive(false);
             patientInfoFade.gameObject.SetActive(true);
@@ -87,8 +85,7 @@ namespace ARHealthCare.UI
 
             mainMenuFade.gameObject.SetActive(true);
             mainMenuFade.canvasGroup.alpha = 1f;
-            mainMenuFade.canvasGroup.interactable = true;
-            mainMenuFade.canvasGroup.blocksRaycasts = true;
+            mainMenuFade.canvasGroup.interactable = true;  
         }
 
     }
