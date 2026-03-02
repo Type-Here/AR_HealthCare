@@ -34,6 +34,7 @@ namespace ARHealthCare.UI
             mainMenuFade.FadeOut();
             mainMenuFade.gameObject.SetActive(false);
             UIButtonsCanvas.SetActive(true);
+            patientInfoFade.gameObject.SetActive(false); // Ensure patient info is hidden when starting AR
         }
 
         // =========================
