@@ -11,6 +11,9 @@ public class PatientProblemsUI : MonoBehaviour
         GameObject item = Instantiate(problemItemPrefab, contentParent);
 
         TextMeshProUGUI tmp = item.GetComponentInChildren<TextMeshProUGUI>();
+        tmp.fontSizeMax = 14; // Set a maximum font size to ensure readability
+        tmp.fontSizeMin = 10; // Set a minimum font size to prevent it from becoming too small
+        tmp.enableAutoSizing = true; // Enable auto-sizing to adjust font size based on content
 
         if (tmp != null)
         {
@@ -25,17 +28,13 @@ public class PatientProblemsUI : MonoBehaviour
 
     void Start()
     {
-        AddProblem("Il goat");
-        AddProblem("ZA PAWAAAA");
-        AddProblem("Piedi");
-        AddProblem("LOL");
-        AddProblem("Il goat");
-        AddProblem("ZA PAWAAAAeeuneu cujisoa cuifdid cuhfhrfinjd");
-        AddProblem("Piedi");
-        AddProblem("LOL");
-        AddProblem("Il goat");
-        AddProblem("ZA PAWAAAA");
-        AddProblem("Piedi");
-        AddProblem("LOL");
+        AddProblem("Paziente: Luigi il Compagnone"
+            + "\nEtà: 25 anni"
+            + "\nDiagnosi: Rottura Crociato Anteriore (Dx)"
+            + "\nIntervento (previsto): Artroscopia con ricostruzione del legamento"   
+            + "\nData intervento (prevista): 1 Aprile 2026"
+            + "\nNote: Paziente sportivo, pratica calcio a livello amatoriale."
+            + "Necessaria riabilitazione post-operatoria di almeno 6 mesi."
+            + "\nTrattamento attuale: Fisioterapia pre-operatoria, antidolorifici NSAIDs al bisogno.");
     }
 }
