@@ -26,15 +26,15 @@ public class PatientProblemsUI : MonoBehaviour
     }
 
 
-    void Start()
+    void Awake()
     {
         AddProblem("Paziente: Luigi il Compagnone"
             + "\nEtà: 25 anni"
-            + "\nDiagnosi: Rottura Crociato Anteriore (Dx)"
+            + "\nDiagnosi: Rottura Crociato Anteriore (Dx)\n"
             + "\nIntervento (previsto): Artroscopia con ricostruzione del legamento"   
-            + "\nData intervento (prevista): 1 Aprile 2026"
+            + "\nData intervento (prevista): 1 Aprile 2026\n"
+            + "\nTrattamento attuale: Fisioterapia pre-operatoria, antidolorifici NSAIDs al bisogno."
             + "\nNote: Paziente sportivo, pratica calcio a livello amatoriale."
-            + "Necessaria riabilitazione post-operatoria di almeno 6 mesi."
-            + "\nTrattamento attuale: Fisioterapia pre-operatoria, antidolorifici NSAIDs al bisogno.");
+            + "\nNecessaria riabilitazione post-operatoria di almeno 6 mesi.");
     }
 }
