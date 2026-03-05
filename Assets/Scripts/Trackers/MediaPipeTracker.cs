@@ -6,7 +6,6 @@ using Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection;
 using Mediapipe.Tasks.Vision.PoseLandmarker;
 using Mediapipe.Tasks.Components.Containers; // Landmark Class here
 
-using System.Linq;
 using System;
 
 namespace ARHealthCare.Trackers
@@ -44,6 +43,21 @@ namespace ARHealthCare.Trackers
         // M4.6: Pre-allocated dictionary to avoid GC allocations per frame
         private Dictionary<string, Pose> _jointsCache;
 
+        // Pre-computed landmark ID → joint name mapping (avoids LINQ/allocations per frame)
+        private static readonly Dictionary<int, string> _landmarkMap = BuildLandmarkMap();
+
+        private static Dictionary<int, string> BuildLandmarkMap()
+        {
+            var desiredIds = new HashSet<int> { 0, 11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28 };
+            var map = new Dictionary<int, string>(desiredIds.Count);
+            foreach (var kvp in LandMarkPoints.Points)
+            {
+                if (desiredIds.Contains(kvp.Key))
+                    map[kvp.Key] = kvp.Value.Replace(" ", "");
+            }
+            return map;
+        }
+
         // Anchor lock: keeps the person's world position fixed so the body does NOT
         // orbit when the user rotates the headset.
         [Tooltip("Lock the person anchor in world space on first detection. Prevents the body from following headset rotation. Call ResetAnchor() to re-detect position.")]
@@ -70,18 +84,18 @@ namespace ARHealthCare.Trackers
         }
 
         /// <summary>
-        /// Initializes the MediaPipe tracker by starting the PoseLandmarkerRunner
-        /// and caching the main camera reference for performance (M4.6).
+        /// Initializes the MediaPipe tracker by caching the main camera reference.
+        /// NOTE: We intentionally DO NOT call _runner.Play() here.
+        /// The PoseLandmarkerRunner manages its own lifecycle through BaseRunner.Start(),
+        /// which waits for Bootstrap to initialize GPU, AssetLoader, and ImageSource before
+        /// starting the Run() coroutine. Calling Play() prematurely causes a native crash
+        /// because MediaPipe resources are not yet available.
         /// </summary>
         public void Initialize()
         {
-            if (_runner != null)
-            {
-                _runner.Play();
-            }
             // M4.6: Cache Camera.main reference to avoid per-frame lookup
             _cachedMainCamera = Camera.main;
-            Debug.Log("MediaPipeTracker: Initialized (MediaPipe Task API active).");
+            Debug.Log("MediaPipeTracker: Initialized. Runner will start via its own lifecycle (Bootstrap → Play).");
         }
 
         /// <summary>
@@ -92,25 +106,20 @@ namespace ARHealthCare.Trackers
         /// <returns> The latest PatientTrackingData with updated joint positions and tracking status. </returns>
         public PatientTrackingData GetTrackingData()
         {
-            if (!_runner.isRunning)
+            // Safety: if the runner hasn't started yet (Bootstrap still initializing),
+            // just return not-tracked data. Do NOT call _runner.Play() here — that would
+            // start Run() before MediaPipe resources are initialized → native crash.
+            if (_runner == null || !_runner.isRunning)
             {
-                _runner.Play();
-                Debug.LogWarning("MediaPipeTracker: PoseLandmarkerRunner was not running. Started it now.");
-                return _currentData; // Return current data (likely not tracked) while waiting for first results
+                _currentData.IsTracked = false;
+                return _currentData;
             }
 
             // M4.6: Profiling marker for performance analysis
             UnityEngine.Profiling.Profiler.BeginSample("MediaPipeTracker.GetTrackingData");
 
-            Debug.Log($"MediaPipeTracker: GetTrackingData called at time {Time.time:F2}s");
-
             // 1. Read the result exposed in the Runner
             var result = _runner.LatestResult;
-
-            Debug.Log($"MediaPipeTracker: poseLandmarks is {(result.poseWorldLandmarks == null ? "null" : $"count={result.poseWorldLandmarks.Count}")}");
-            Debug.Log($"MediaPipeTracker: LatestResult poseWorldLandmarks count = {result.poseWorldLandmarks?.Count ?? 0}");
-            //if (Time.frameCount % 60 == 0)
-            //    Debug.Log($"MP IsTracked={_currentData.IsTracked} joints={_currentData.Joints.Count} t={Time.time:F2}");
 
             // 2. Security Checks
             // result.poseWorldLandmarks is a list of lists (one list for each detected person)
@@ -126,9 +135,6 @@ namespace ARHealthCare.Trackers
             // - Take the first person (index 0) Landmarks Container
             // - Take the landmarks list from the container 
             var landmarks = result.poseWorldLandmarks[0].landmarks;
-            
-            Debug.Log($"MediaPipeTracker: Detected {landmarks.Count} landmarks for the first person.");
-            Debug.Log($"MediaPipeTracker: First landmark (Nose) position: x={landmarks[0].x:F2}, y={landmarks[0].y:F2}, z={landmarks[0].z:F2}");
 
             // 3. Map the Landmarks to our PatientTrackingData structure
             if (landmarks != null && landmarks.Count > 0)
@@ -139,20 +145,7 @@ namespace ARHealthCare.Trackers
                 _jointsCache.Clear();
                 
                 // --- MAPPING ---
-                // MediaPipe Pose Landmark ID Reference:
-                // 0: Nose
-                // 11: Left Shoulder, 12: Right Shoulder
-                // 13: Left Elbow, 14: Right Elbow
-                // 15: Left Wrist, 16: Right Wrist
-                
-                /* TODO: Expand this mapping as needed for more joints
-                 * Map landmarks using a lookup to reduce repetitive checks and avoid repeated Count tests
-                 * For Now: We only map a subset of joints needed for medical overlay
-                 */
-                var desiredIds = new[] { 0, 11, 12, 13, 14, 15, 16, 25, 27, 26, 28, 23, 24 };
-                var landmarkMap = LandMarkPoints.Points
-                                    .Where(kv => desiredIds.Contains(kv.Key))
-                                    .ToDictionary(kv => kv.Key, kv => kv.Value.Replace(" ", ""));
+                // Uses static pre-computed _landmarkMap (zero per-frame allocations)
 
                 // Step A: Compute hips center in MediaPipe world space.
                 // MediaPipe poseWorldLandmarks have origin approximately at the person's hips center.
@@ -166,7 +159,6 @@ namespace ARHealthCare.Trackers
                         (landmarks[23].y + landmarks[24].y) * 0.5f,
                         (landmarks[23].z + landmarks[24].z) * 0.5f
                     );
-                    Debug.Log($"MediaPipeTracker: hipsCenterMP = {hipsCenterMP}");
                 }
 
                 // Step B: Compute yaw-only camera rotation (once per frame, shared by anchor + all landmarks).
@@ -182,10 +174,9 @@ namespace ARHealthCare.Trackers
 
                 // Step C: Compute person anchor in world space (yaw-aware, lockable).
                 Vector3 personAnchorWorld = ComputePersonAnchorWorld(cameraYaw);
-                Debug.Log($"MediaPipeTracker: personAnchorWorld = {personAnchorWorld} (locked={_anchorLocked})");
 
                 // Step D: Convert each landmark — relative offset from hips → Unity world space.
-                foreach (var kvp in landmarkMap)
+                foreach (var kvp in _landmarkMap)
                 {
                     int idx = kvp.Key;
                     string joint = kvp.Value;

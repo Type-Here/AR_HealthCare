@@ -78,9 +78,12 @@ namespace ARHealthCare.Trackers
 
         public void Initialize()
         {
-            _runner?.Play();
+            // NOTE: We intentionally DO NOT call _runner.Play() here.
+            // The PoseLandmarkerRunner manages its own lifecycle through BaseRunner.Start(),
+            // which waits for Bootstrap to initialize GPU, AssetLoader, and ImageSource.
+            // Calling Play() prematurely causes a native crash on device.
             _cam = Camera.main;
-            Debug.Log("[MediaPipeTrackerV2] Initialized — screen-space projection mode.");
+            Debug.Log("[MediaPipeTrackerV2] Initialized. Runner will start via its own lifecycle (Bootstrap → Play).");
         }
 
         public PatientTrackingData GetTrackingData()
@@ -90,7 +93,8 @@ namespace ARHealthCare.Trackers
 
             if (_runner == null || !_runner.isRunning)
             {
-                _runner?.Play();
+                // Runner not ready yet (Bootstrap still initializing).
+                // Do NOT call Play() here — that causes native crash.
                 _currentData.IsTracked = false;
                 return _currentData;
             }
