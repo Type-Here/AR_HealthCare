@@ -1996,10 +1996,7 @@ PrefabInstance:
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 3503167532966410781, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1802134075}
-    - targetCorrespondingSourceObject: {fileID: 3503167532966410781, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1802134078}
+      addedObject: {fileID: 1802134076}
   m_SourcePrefab: {fileID: 100100000, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
 --- !u!4 &1316171935 stripped
 Transform:
@@ -2792,41 +2789,7 @@ GameObject:
   m_CorrespondingSourceObject: {fileID: 3503167532966410781, guid: 9bd72731ebe2248478ba4849c274a43b, type: 3}
   m_PrefabInstance: {fileID: 1316171934}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1802134075
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1802134072}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0af0d3677ccbe9b4e9ea122107ed84cf, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Visuals.MedicalAvatarIK
-  globalWeight: 1
-  bodyWeight: 1
-  headWeight: 0.85
-  handsWeight: 1
-  feetWeight: 0.85
-  positionLerpSpeed: 12
-  rotationSlerpSpeed: 12
-  movementDeadZone: 0.02
-  useAdaptiveSmoothing: 1
-  maxVelocity: 2
-  useAnchor: 1
-  anchorOffset: {x: 0, y: 0, z: 0}
-  verticalBodyOffset: 0.3
-  useDynamicScaling: 1
-  expectedPatientDistance: 2
-  manualAvatarScale: 1
-  referenceBodyHeight: 1.7
-  elbowHintWeight: 1
-  kneeHintWeight: 1
-  trackingProviderBehaviour: {fileID: 1049046326}
-  logOnce: 1
-  drawGizmos: 1
---- !u!114 &1802134078
+--- !u!114 &1802134076
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -2835,27 +2798,33 @@ MonoBehaviour:
   m_GameObject: {fileID: 1802134072}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: bb9e134bb07e06340b9a4731295d2e7b, type: 3}
+  m_Script: {fileID: 11500000, guid: 72e27070a79f8d24fa0945b02ddf9fea, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Visuals.ZEDSkeletonAnimator
+  m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Visuals.HybridAvatarIK
+  globalWeight: 1
+  bodyWeight: 1
+  headWeight: 0.8
+  handsWeight: 1
+  feetWeight: 0.8
+  positionLerpSpeed: 12
+  rotationSlerpSpeed: 12
+  movementDeadZone: 0.02
+  useAdaptiveSmoothing: 1
+  maxVelocity: 2
+  useAnchor: 1
   anchorOffset: {x: 0, y: 0, z: 0}
-  verticalBodyOffset: 0.3
-  smoothingValue: 0.2
-  enableFootIK: 1
-  enableFootLocking: 1
-  footLockingSmoothingValue: 0.3
-  thresholdEnterGroundedState: 0.03
-  thresholdLeaveGroundedState: 0.2
-  thresholdFootLock: 0.05
-  raycastDetectionLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  ikPositionApplicationRatio: 1
-  ikRotationApplicationRatio: 1
-  ankleHeightOffset: 0.102
-  avatarScale: 1
+  verticalBodyOffset: 0.5
+  useDynamicScaling: 1
+  expectedPatientDistance: 1.5
+  manualAvatarScale: 1
+  referenceBodyHeight: 1.7
+  elbowHintWeight: 1
+  kneeHintWeight: 0.5
+  correctionWeight: 0.7
+  correctionSmoothing: 0.3
   trackingProviderBehaviour: {fileID: 1049046326}
-  resetVerticalOffset: 114
+  logOnce: 1
+  drawGizmos: 1
 --- !u!1 &1806680259
 GameObject:
   m_ObjectHideFlags: 0
