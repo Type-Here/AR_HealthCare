@@ -1,4 +1,4 @@
-#define AR_HEALTHCARE_DEBUG
+//#define AR_HEALTHCARE_DEBUG
 
 using System.Collections.Generic;
 using UnityEngine;
