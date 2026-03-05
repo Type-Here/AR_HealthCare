@@ -1,1 +1,1 @@
-#define AR_HEALTHCARE_DEBUG // Comment to disable debug logs in GeneralConfigs
+//#define AR_HEALTHCARE_DEBUG // Comment to disable debug logs in GeneralConfigs
