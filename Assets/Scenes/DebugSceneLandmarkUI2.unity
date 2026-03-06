@@ -2815,8 +2815,8 @@ MonoBehaviour:
   anchorOffset: {x: 0, y: 0, z: 0}
   verticalBodyOffset: 0.5
   useDynamicScaling: 1
-  expectedPatientDistance: 1.5
-  manualAvatarScale: 1
+  expectedPatientDistance: 2
+  manualAvatarScale: 1.2
   referenceBodyHeight: 1.7
   elbowHintWeight: 1
   kneeHintWeight: 0.5

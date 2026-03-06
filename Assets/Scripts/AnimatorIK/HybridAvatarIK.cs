@@ -230,11 +230,18 @@ namespace ARHealthCare.Visuals
             ApplyBodyRoot(data);
 
             // ── Dynamic scaling ──
+            // Dynamic + Emperical Adjustment: On correct parameters in inspector, avatar is still smaller than real body
+            // in every dimension. We apply an additional 1.2x scale multiplier to compensate for this, which gives a more natural size in testing.
             if (useDynamicScaling && data.EstimatedBodyHeight > 0.5f)
             {
-                float sf = Mathf.Clamp(data.EstimatedBodyHeight / referenceBodyHeight, 0.5f, 2.5f);
-                transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * sf,
+                float sf = Mathf.Clamp(data.EstimatedBodyHeight / referenceBodyHeight, 0.6f, 2.9f);
+                transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * sf * 1.2f, // 1.2f empirical
                                                      Time.deltaTime * 2f);
+            } else if (useDynamicScaling)
+            {
+                //Still apply empirical adjustment:
+                transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * 1.2f, // 1.2f empirical
+                                                     Time.deltaTime * 2f); 
             }
 
             // ── Hand IK goals ──
