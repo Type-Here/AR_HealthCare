@@ -20,6 +20,8 @@ namespace Mediapipe.ARHealthCare
 
     public RunningMode runningMode;
 
+    public bool isRunning => _coroutine != null;
+
     public override void Play()
     {
       if (_coroutine != null)

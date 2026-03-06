@@ -179,3 +179,11 @@ Desktop.ini
 # Ignore libc++_shared.so (required lib for mediapipe) and its meta file
 **/Assets/Plugins/Android/libc++_shared.so
 **/Assets/Plugins/Android/libc++_shared.so.meta
+
+
+# Ignore some backup files
+*.unity-bkp 
+*.unity-bkp.meta
+
+# Ignore github directory
+.github/

@@ -39,13 +39,13 @@ namespace Mediapipe.ARHealthCare.Sample.PoseLandmarkDetection
 
     public ImageReadMode ImageReadMode { get; set; } = ImageReadMode.CPUAsync;
 
-    public ModelType Model { get; set; } = ModelType.BlazePoseLite;
+    public ModelType Model { get; set; } = ModelType.BlazePoseFull;
     public Tasks.Vision.Core.RunningMode RunningMode { get; set; } = Tasks.Vision.Core.RunningMode.LIVE_STREAM;
 
     public int NumPoses { get; set; } = 1;
     public float MinPoseDetectionConfidence { get; set; } = 0.7f;
-    public float MinPosePresenceConfidence { get; set; } = 0.55f;
-    public float MinTrackingConfidence { get; set; } = 0.55f;
+    public float MinPosePresenceConfidence { get; set; } = 0.6f;
+    public float MinTrackingConfidence { get; set; } = 0.6f;
     public bool OutputSegmentationMasks { get; set; } = false;
     public string ModelName => Model.GetDescription() ?? Model.ToString();
     public string ModelPath

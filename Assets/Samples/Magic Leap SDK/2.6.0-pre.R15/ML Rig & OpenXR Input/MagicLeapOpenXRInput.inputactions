@@ -123,7 +123,7 @@
                     "name": "Bumper",
                     "type": "Button",
                     "id": "8a82fc41-c7bb-47e9-90cf-6b508eb9ec38",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -132,7 +132,7 @@
                     "name": "Trigger",
                     "type": "Button",
                     "id": "1fa3608e-6202-4454-a93b-48c342dd01bb",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": false
@@ -213,7 +213,7 @@
                     "name": "IsTracked",
                     "type": "Value",
                     "id": "b4aa4314-d7d0-4266-b667-25e31fd39dff",
-                    "expectedControlType": "Button",
+                    "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
                     "initialStateCheck": true
@@ -554,7 +554,7 @@
                     "path": "<MagicLeapController>/trackingState",
                     "interactions": "",
                     "processors": "",
-                    "groups": "",
+                    "groups": ";Magic Leap 2",
                     "action": "Status",
                     "isComposite": false,
                     "isPartOfComposite": false
