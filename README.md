@@ -262,4 +262,20 @@ Full technical documentation is available in [`Docs/README.md`](Docs/README.md),
 
 ---
 
+## Acknowledgement
+
+`MediaPipeUnityPlugin` is a fantastic open-source project that made this possible. Special thanks to the maintainers and contributors for their work on the plugin and documentation.
+
+---
+
+## Disclaimer
+
+This project is released "as is", without any warranties. It is intended as a technical prototype for demonstration purposes only. It is not intended for production use or clinical applications. Always consult with qualified professionals for medical use cases.
+
+For specific components, please refer to the original licenses of the dependencies.
+
+The disclaimer above and the license information from `main` branch apply to this project as a whole. Individual files may have additional license notices if they include code from third-party sources.
+
+---
+
 *Last updated: March 2026*
