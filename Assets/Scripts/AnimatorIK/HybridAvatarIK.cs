@@ -226,10 +226,7 @@ namespace ARHealthCare.Visuals
             _latestData = data;
             _hasValidData = true;
 
-            // ── Body root ──
-            ApplyBodyRoot(data);
-
-            // ── Dynamic scaling ──
+            // ── Dynamic scaling (BEFORE body root so position uses current-frame scale) ──
             // Dynamic + Emperical Adjustment: On correct parameters in inspector, avatar is still smaller than real body
             // in every dimension. We apply an additional 1.2x scale multiplier to compensate for this, which gives a more natural size in testing.
             if (useDynamicScaling && data.EstimatedBodyHeight > 0.5f)
@@ -243,6 +240,9 @@ namespace ARHealthCare.Visuals
                 transform.localScale = Vector3.Lerp(transform.localScale, Vector3.one * 1.2f, // 1.2f empirical
                                                      Time.deltaTime * 2f); 
             }
+
+            // ── Body root (uses current-frame scale for offset compensation) ──
+            ApplyBodyRoot(data);
 
             // ── Hand IK goals ──
             ApplyHandGoal(AvatarIKGoal.LeftHand,  "LeftWrist",  "LeftElbow",  "LeftShoulder",  data, handsWeight);
@@ -260,6 +260,13 @@ namespace ARHealthCare.Visuals
             ApplyHintIK(AvatarIKHint.RightElbow, "RightElbow", data, elbowHintWeight);
             ApplyHintIK(AvatarIKHint.LeftKnee,   "LeftKnee",   data, kneeHintWeight);
             ApplyHintIK(AvatarIKHint.RightKnee,  "RightKnee",  data, kneeHintWeight);
+
+            // If available, set IK for Index and Pinky fingers 
+            // (17, 19 for left hand; 16, 18 for right hand) to improve hand pose. 
+            // Requires MediaPipe tracker to include these landmarks 
+            // and corresponding keys in PatientTrackingData.
+
+
         }
 
         #endregion
@@ -355,8 +362,14 @@ namespace ARHealthCare.Visuals
             Vector3 hipsMid     = (lHip.position + rHip.position) * 0.5f;
             Vector3 shoulderMid = (lSh.position  + rSh.position)  * 0.5f;
 
-            // Position: hips center + configurable offsets
-            Vector3 targetPos = hipsMid + anchorOffset + Vector3.up * verticalBodyOffset;
+            // Position: hips center + configurable offsets, scaled proportionally
+            // to the current avatar scale so that the offset stays correct at any distance.
+            // Without this, the fixed offset causes the avatar to drop when closer (bigger)
+            // and rise when farther (smaller).
+            float currentScale = transform.localScale.x; // uniform scale
+            Vector3 targetPos = hipsMid
+                              + anchorOffset * currentScale
+                              + Vector3.up * (verticalBodyOffset * currentScale);
             transform.position = Vector3.Lerp(transform.position, targetPos,
                                               Time.deltaTime * positionLerpSpeed);
 
