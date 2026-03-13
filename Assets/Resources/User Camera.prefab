@@ -47,8 +47,6 @@ GameObject:
   - component: {fileID: 282993637693407150}
   - component: {fileID: 8675873837065656636}
   - component: {fileID: 6254197044081499691}
-  - component: {fileID: 55580551237558698}
-  - component: {fileID: 599125962375591172}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -259,41 +257,6 @@ MonoBehaviour:
   _sourceName: MLCamera
   _fallbackWidth: 640
   _fallbackHeight: 480
---- !u!114 &55580551237558698
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4625646871401721495}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4966719baa26e4b0e8231a24d9bd491a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.XR.ARFoundation::UnityEngine.XR.ARFoundation.ARCameraManager
-  m_FocusMode: -1
-  m_LightEstimationMode: -1
-  m_AutoFocus: 1
-  m_ImageStabilization: 0
-  m_LightEstimation: 0
-  m_FacingDirection: 1
-  m_RenderMode: 0
---- !u!114 &599125962375591172
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4625646871401721495}
-  m_Enabled: 0
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7d8db73bb57924a46a3661e7f36eea17, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Input.ARFCameraBridge
-  cameraManager: {fileID: 55580551237558698}
-  cpuDownscale: 2
-  preferGpu: 0
-  cpuMode: 1
 --- !u!1 &6360139985934227725
 GameObject:
   m_ObjectHideFlags: 0

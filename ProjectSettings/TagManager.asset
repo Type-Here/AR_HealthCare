@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - Global Resource
+  - Avatar3D
   layers:
   - Default
   - TransparentFX
