@@ -39,6 +39,14 @@ namespace ARHealthCare.Trackers
         [Header("Debug")]
         public bool verbose = false;
 
+        [Header("Visibility Filter")]
+        [Tooltip("Landmarks with Visibility below this threshold are excluded from tracking data.\n" +
+                 "MediaPipe always estimates all 33 landmarks, even off-screen ones.\n" +
+                 "Filtering by visibility prevents using hallucinated positions.")]
+        [Range(0f, 1f)]
+        public float visibilityThresholdForHips = 0.4f;
+        public float visibilityThresholdForOthers = 0.1f;
+
         //Internals
         private readonly PoseLandmarkerRunner _runner;
         private PatientTrackingData           _currentData;
@@ -139,6 +147,12 @@ namespace ARHealthCare.Trackers
 
                 var norm  = normLandmarks[id];
                 var world = worldLandmarks[id];
+
+                // Skip landmarks that MediaPipe hallucinated (off-screen / low confidence).
+                // Without this, hips are always "present" even when out of frame,
+                // preventing the close-range Nose-based fallback in HybridAvatarIK.
+                if (key.ToLower().Contains("hip") && norm.visibility.HasValue && norm.visibility.Value < visibilityThresholdForHips)
+                    continue;
 
                 // XY: normalized image coordinates → screen pixels.
                 // Image Y: 0 = top → flip for Unity screen (0 = bottom).
