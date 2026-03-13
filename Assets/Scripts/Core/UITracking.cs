@@ -23,5 +23,17 @@ namespace ARHealthCare.Core
                 trackingObjects[i].SetActive(false);
             }
         }
+
+        public void HideOnlyAvatar()
+        {
+            for (int i = 0; i < trackingObjects.Count; i++)
+            {
+                if (trackingObjects[i].name.ToLower().Contains("dummy") || 
+                    trackingObjects[i].tag.ToLower() == "avatar3d")
+                {
+                    trackingObjects[i].SetActive(false);
+                }
+            }
+        }
     }
 }
