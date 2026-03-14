@@ -8,13 +8,14 @@
 ![Platform](https://img.shields.io/badge/Platform-Magic_Leap_2-blue)
 ![MediaPipe](https://img.shields.io/badge/MediaPipe-0.16.3-brightgreen)
 ![AR Foundation](https://img.shields.io/badge/AR_Foundation-6.3.3-orange)
+![XR Interaction Toolkit](https://img.shields.io/badge/XRI_Toolkit-3.3.0-gree)
 ![Status](https://img.shields.io/badge/Status-M4_Complete-success)
 
 ---
 
 ## Overview
 
-AR HealthCare uses a **Magic Leap 2** AR headset (or any AR Foundation–compatible device) to capture the patient's body via the headset camera, run **Google MediaPipe BlazePose** inference locally, and overlay a fully rigged humanoid avatar that mirrors the patient's posture in real time. The system is built for healthcare professionals who need to visualize anatomical structures on a live patient.
+AR HealthCare uses a **Magic Leap 2** AR headset (or any AR Foundation–compatible device) to capture the patient's body via the headset camera, run **Google MediaPipe BlazePose** inference **locally**, and overlay a fully rigged humanoid avatar that mirrors the patient's posture in real time. The system is built for healthcare professionals who need to visualize anatomical structures and clinical info on a live patient.
 
 ---
 
