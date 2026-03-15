@@ -70,7 +70,8 @@ namespace ARHealthCare.UI
                 mainMenuFade.canvasGroup.alpha = 1f;
                 mainMenuFade.canvasGroup.interactable = true;
                 mainMenuFade.canvasGroup.blocksRaycasts = true;
-                uiTracking.StopTrackingFromCore();
+                //uiTracking.StopTrackingFromCore();
+                uiTracking.HideOnlyAvatar();
 
                 UIButtonsCanvas.SetActive(false);
             }

@@ -37,7 +37,7 @@ namespace ARHealthCare.Visuals
     /// Tune correctionWeight (0=pure IK, 1=full tracking angles) and correctionSmoothing.
     /// </summary>
     [RequireComponent(typeof(Animator))]
-    public class HybridAvatarIK : MonoBehaviour
+    public class HybridAvatarIKv2 : MonoBehaviour
     {
         private Animator _animator;
 
@@ -62,43 +62,26 @@ namespace ARHealthCare.Visuals
         [Tooltip("Maximum velocity (m/s) for adaptive smoothing normalization.")]
         public float maxVelocity = 2.0f;
 
-        [Header("Spatial Anchor (calibrated at referenceDistance)")]
+        [Header("Spatial Anchor")]
         [Tooltip("Enable to anchor avatar to patient hips.")]
         public bool useAnchor = true;
-
-        [Tooltip("If true, hips are ignored and root is anchored to nose position instead" + 
-               "(for close-range tracking loss fallback).")]
-        public bool useOnlyHeadForRoot = false; 
-        [Tooltip("Offset from patient hips to avatar root (meters), at reference distance.")]
-        public Vector3 anchorOffset = Vector3.zero;
-        [Tooltip("Vertical shift (positive = up) at reference distance (1.7m).\n" +
-                 "Scales proportionally with avatar size.\n" +
-                 "Not applied upward beyond maxVerticalOffsetDistance.")]
-        public float verticalBodyOffset = 0.3f;
-        [Tooltip("Beyond this distance (m), upward vertical offset is NOT applied.\n" +
-                 "At long range the offset causes more harm than good.")]
-        public float maxVerticalOffsetDistance = 2.1f;
-
-        [Header("Dynamic Scaling (calibrated at referenceDistance)")]
-        [Tooltip("Auto-scale avatar based on estimated body height + segment stretch.")]
-        public bool useDynamicScaling = true;
-        [Tooltip("Reference distance (m) for which all scale/offset values are calibrated.\n" +
-                 "Set this to the typical patient distance during calibration.")]
+        [Tooltip("Vertical offset from hips anchor (meters). Positive = up.")]
+        public float verticalBodyOffset = 0.1f;
+        [Tooltip("Base uniform scale for the avatar model.\n" +
+                 "Accounts for model being smaller/larger than real human.\n" +
+                 "Applied once at start; segment stretch adjusts proportions on top.")]
+        [Range(0.5f, 2.5f)] public float baseScaleMultiplier = 1.2f;
+        [Tooltip("Reference distance (m) for which scale/offset values are calibrated.\n" +
+                 "Distance factor = referenceDistance / currentDistance → 1.0 at this distance.")]
         public float referenceDistance = 1.7f;
-        [Tooltip("Reference body height for uniform scale calc (~1.7m average adult).")]
-        public float referenceBodyHeight = 1.7f;
-        [Tooltip("Empirical base scale multiplier at reference distance. Adjust if avatar is globally too small/large.")]
-        [Range(0.8f, 2.0f)] public float baseScaleMultiplier = 1.2f;
-        [Tooltip("Manual scale if useDynamicScaling is off.")]
-        [Range(0.5f, 2.5f)] public float manualAvatarScale = 1.0f;
 
-        [Header("Segment Stretch (proportional body fitting)")]
-        [Tooltip("Stretch upper body (shoulders\u2192hips) to match tracked proportions.\n" +
-                 "1.0 = match tracked length exactly. >1 = elongate torso.")]
-        [Range(0.5f, 2.0f)] public float upperBodyScale = 1.0f;
-        [Tooltip("Stretch lower body (hips\u2192feet) to match tracked proportions.\n" +
-                 "1.0 = match tracked length exactly. >1 = elongate legs.")]
-        [Range(0.5f, 2.0f)] public float lowerBodyScale = 1.0f;
+        [Header("Segment Scaling (per-segment proportional fitting)")]
+        [Tooltip("Upper body height multiplier (Nose\u2192Hips).\n" +
+                 "1.0 = match tracked exactly. >1 = elongate torso.")]
+        [Range(0.5f, 2.5f)] public float upperBodyScale = 1.0f;
+        [Tooltip("Lower body height multiplier (Hips\u2192Feet).\n" +
+                 "1.0 = match tracked exactly. >1 = elongate legs.")]
+        [Range(0.5f, 2.5f)] public float lowerBodyScale = 1.0f;
         [Tooltip("Smoothing speed for segment stretch (higher = snappier).")]
         public float stretchLerpSpeed = 5f;
 
@@ -164,7 +147,6 @@ namespace ARHealthCare.Visuals
         private float _lastUpperBodyScale = 1f;
         private float _lastLowerBodyScale = 1f;
 
-
         #endregion
 
         // Limb segments for Phase 2 correction.
@@ -219,11 +201,9 @@ namespace ARHealthCare.Visuals
             _rFootBoneT     = _animator.GetBoneTransform(HumanBodyBones.RightFoot);
             _headBoneT      = _animator.GetBoneTransform(HumanBodyBones.Head);
 
-            if (!useDynamicScaling && Mathf.Abs(manualAvatarScale - 1f) > 0.01f)
-            {
-                transform.localScale = Vector3.one * manualAvatarScale;
-                Debug.Log($"HybridAvatarIK: Manual scale = {manualAvatarScale}");
-            }
+            // Apply base uniform scale once — segment stretch adjusts Y on top
+            if (Mathf.Abs(baseScaleMultiplier - 1f) > 0.01f)
+                transform.localScale = Vector3.one * baseScaleMultiplier;
         }
 
         #endregion
@@ -265,31 +245,16 @@ namespace ARHealthCare.Visuals
 
             if (logOnce && !_logged)
             {
-                Debug.Log($"HybridAvatarIK: Running. Joints={data.Joints.Count} " +
+                Debug.Log($"HybridAvatarIKv2: Running. Joints={data.Joints.Count} " +
                           $"provider={_trackingProvider.GetType().Name}");
                 _logged = true;
             }
 
-            // Store for LateUpdate (Phase 2)
+            // Store for LateUpdate (Phase 2 + Phase 3)
             _latestData = data;
             _hasValidData = true;
 
-            // ── Dynamic scaling (BEFORE body root so position uses current-frame scale) ──
-            // Uniform scale from EstimatedBodyHeight + baseScaleMultiplier (calibrated at referenceDistance).
-            // Segment stretch (Phase 3 in LateUpdate) corrects upper/lower body proportions on top of this.
-            if (useDynamicScaling && data.EstimatedBodyHeight > 0.5f)
-            {
-                float sf = Mathf.Clamp(data.EstimatedBodyHeight / referenceBodyHeight, 0.6f, 1.8f);
-                transform.localScale = Vector3.Lerp(transform.localScale,
-                    Vector3.one * sf * baseScaleMultiplier, Time.deltaTime * 2f);
-            }
-            else if (useDynamicScaling)
-            {
-                transform.localScale = Vector3.Lerp(transform.localScale,
-                    Vector3.one * baseScaleMultiplier, Time.deltaTime * 2f);
-            }
-
-            // ── Body root (uses current-frame scale for offset compensation) ──
+            // ── Body root — hips anchor (or nose fallback) ──
             ApplyBodyRoot(data);
 
             // ── Hand IK goals ──
@@ -344,7 +309,7 @@ namespace ARHealthCare.Visuals
 
             var data = _latestData;
 
-            // Phase 2: bone rotation corrections 
+            // ── Phase 2: bone rotation corrections ──
             if (correctionWeight >= 0.01f)
             {
                 float w = correctionWeight * Mathf.Clamp01(globalWeight);
@@ -381,85 +346,145 @@ namespace ARHealthCare.Visuals
                 }
             }
 
-            // Phase 3: segment stretch for proportional body fitting
-            if (useDynamicScaling)
-                ApplySegmentStretch(data);
+            // ── Phase 3: per-segment scaling for proportional body fitting ──
+            ApplySegmentStretch(data);
         }
 
         #endregion
 
         // ═══════════════════════════════════════════════════════════════════
-        //  PHASE 3 — Segment stretch: match tracked upper/lower body lengths
+        //  PHASE 3 — Per-segment height scaling only
         //
-        //  Measures tracked shoulder→hip and hip→ankle distances, compares to
-        //  the avatar's current bone chain lengths (post-IK, post-Phase2),
-        //  and stretches Spine (upper) / UpperLeg (lower) bones via localScale.y.
-        //  This fixes "short legs" and adapts proportions across distances.
+        //  Upper body: scales Spine.localScale.y so avatar Head→Hips
+        //  matches tracked Nose→HipMid distance.
+        //
+        //  Lower body: scales UpperLeg.localScale.y so avatar Hips→Feet
+        //  matches tracked HipMid→AnkleMid distance.
+        //
+        //  Width (X/Z) is NOT scaled — the avatar's natural proportions
+        //  are kept. The IK goals already place wrists/ankles at tracked
+        //  positions, which handles lateral sizing implicitly.
+        //  Clamps prevent extreme ratios from degenerate tracking.
         // ═══════════════════════════════════════════════════════════════════
 
-        #region Phase 3: Segment Stretch
+        #region Phase 3: Segment Scaling
+
+        /// <summary>
+        /// Calcola l'altezza in pixel di una persona o oggetto nell'immagine della fotocamera.
+        /// </summary>
+        /// <param name="verticalFOV">FOV verticale della telecamera in gradi.</param>
+        /// <param name="verticalResolution">Risoluzione verticale dell'immagine in pixel (es. 720).</param>
+        /// <param name="estimatedDistance">Distanza stimata del paziente in metri.</param>
+        /// <param name="realHeight">Altezza reale del paziente in metri (es. 1.80f).</param>
+        /// <returns>Altezza apparente in pixel sul frame.</returns>
+        public static float CalculatePixelHeight(float verticalFOV, int verticalResolution, float estimatedDistance, float realHeight)
+        {
+            // Safety checks to prevent invalid calculations
+            if (estimatedDistance <= 0f)
+            {
+                Debug.LogWarning("La distanza stimata deve essere maggiore di zero.");
+                return 0f;
+            }
+
+            if (verticalFOV <= 0f || verticalFOV >= 180f)
+            {
+                Debug.LogWarning("Il FOV verticale deve essere compreso tra 0 e 180 gradi.");
+                return 0f;
+            }
+
+            // 1. Convert half FOV to radiants
+            float halfFovRad = (verticalFOV / 2f) * Mathf.Deg2Rad;
+
+            // 2. Calculate the vertical focal length (fy) in pixels
+            float fy = (verticalResolution / 2f) / Mathf.Tan(halfFovRad);
+
+            // 3. Calculate the apparent height in pixels
+            float hPixel = realHeight * (fy / estimatedDistance);
+
+            return hPixel / verticalResolution * 100f; // Return as percentage of vertical resolution
+        }
+
 
         private void ApplySegmentStretch(PatientTrackingData data)
         {
-            // Need shoulder, hip, ankle landmarks from tracking
-            if (!TryGet(data, "LeftShoulder", out var lSh) || !TryGet(data, "RightShoulder", out var rSh) ||
-                !TryGet(data, "LeftHip", out var lHip)      || !TryGet(data, "RightHip", out var rHip) ||
-                !TryGet(data, "LeftAnkle", out var lAnk)    || !TryGet(data, "RightAnkle", out var rAnk))
-                return;
-
-            if (_spineT == null || _hipsBoneT == null || _lShoulderBoneT == null ||
-                _rShoulderBoneT == null || _lFootBoneT == null || _rFootBoneT == null ||
+            if (_spineT == null || _hipsBoneT == null || _headBoneT == null ||
                 _lUpperLegT == null || _rUpperLegT == null)
                 return;
 
-            // ── Tracked segment lengths (world-space) ──
-            Vector3 tShMid  = (lSh.position  + rSh.position)  * 0.5f;
-            Vector3 tHipMid = (lHip.position  + rHip.position) * 0.5f;
-            Vector3 tAnkMid = (lAnk.position  + rAnk.position) * 0.5f;
+            bool hasNose   = TryGet(data, "Nose", out var nose);
+            bool hasLHip   = TryGet(data, "LeftHip", out var lHip);
+            bool hasRHip   = TryGet(data, "RightHip", out var rHip);
+            bool hasHips   = hasLHip && hasRHip;
+            bool hasLAnk   = TryGet(data, "LeftAnkle", out var lAnk);
+            bool hasRAnk   = TryGet(data, "RightAnkle", out var rAnk);
+            bool hasAnkles = hasLAnk && hasRAnk;
 
-            float trackedUpper = Vector3.Distance(tShMid, tHipMid);
-            float trackedLower = Vector3.Distance(tHipMid, tAnkMid);
+            // Distance-based factor: 1.0 at referenceDistance, >1 closer, <1 farther
+            float distFactor = referenceDistance / Mathf.Max(0.5f, data.EstimatedDistance);
+            float upBodyScale = upperBodyScale * distFactor;
+            float lowBodyScale = lowerBodyScale * distFactor;
 
-            if (trackedUpper < 0.02f || trackedLower < 0.02f) return; // degenerate
-
-            // ── Avatar segment lengths (post-IK, post-Phase2, world-space) ──
-            Vector3 aShMid  = (_lShoulderBoneT.position + _rShoulderBoneT.position) * 0.5f;
-            Vector3 aAnkMid = (_lFootBoneT.position     + _rFootBoneT.position)     * 0.5f;
-
-            float avatarUpper = Vector3.Distance(aShMid, _hipsBoneT.position);
-            float avatarLower = Vector3.Distance(_hipsBoneT.position, aAnkMid);
-
-            if (avatarUpper < 0.01f || avatarLower < 0.01f) return;
-
-            // ── Stretch ratios: tracked / avatar × inspector multiplier ──
-            float upperRatio = Mathf.Clamp((trackedUpper / avatarUpper) * upperBodyScale, 0.5f, 2.0f);
-            float lowerRatio = Mathf.Clamp((trackedLower / avatarLower) * lowerBodyScale, 0.5f, 2.0f);
-
-            // If hips are lost, maintain last known stretch ratios to avoid popping back to default scale.
-            _lastUpperBodyScale = upperRatio;
-            _lastLowerBodyScale = lowerRatio;
-
-            if (!_hasLastValidHipsMid)            
+            if (!hasHips)
             {
-                upperRatio = _lastUpperBodyScale;
-                lowerRatio = _lastLowerBodyScale;
+                // Can't do anything without hips, which are the anchor for both segments.
+                // Keep previous scales to avoid collapsing body during tracking loss.
+                Vector3 spS = _spineT.localScale;
+                spS.y = Mathf.Lerp(spS.y, _lastUpperBodyScale, Time.deltaTime * stretchLerpSpeed * 1.35f);
+                _spineT.localScale = spS;
+
+                Vector3 lLS = _lUpperLegT.localScale;
+                lLS.y = Mathf.Lerp(lLS.y, _lastLowerBodyScale, Time.deltaTime * stretchLerpSpeed * 1.35f);
+                _lUpperLegT.localScale = lLS;
+
+                Vector3 rLS = _rUpperLegT.localScale;
+                rLS.y = Mathf.Lerp(rLS.y, _lastLowerBodyScale, Time.deltaTime * stretchLerpSpeed * 1.35f);
+                _rUpperLegT.localScale = rLS;
+                return;
             }
-            
+
+            Vector3 tHipMid = (lHip.position + rHip.position) * 0.5f;
+
             float t = Time.deltaTime * stretchLerpSpeed;
 
-            // ── Upper body: stretch Spine bone ──
-            Vector3 spS = _spineT.localScale;
-            spS.y = Mathf.Lerp(spS.y, upperRatio, t);
-            _spineT.localScale = spS;
+            // ── Upper body: Nose → HipMid height only ──
+            if (hasNose)
+            {
+                float trackedUpperH = Vector3.Distance(nose.position, tHipMid);
+                float avatarUpperH  = Vector3.Distance(_headBoneT.position, _hipsBoneT.position);
 
-            // ── Lower body: stretch both UpperLeg bones ──
-            Vector3 lLS = _lUpperLegT.localScale;
-            lLS.y = Mathf.Lerp(lLS.y, lowerRatio, t);
-            _lUpperLegT.localScale = lLS;
+                if (trackedUpperH > 0.05f && avatarUpperH > 0.01f)
+                {
+                    float hRatio = Mathf.Clamp((trackedUpperH / avatarUpperH) * upBodyScale, 0.5f, 1.2f);
+                    Vector3 spS = _spineT.localScale;
+                    spS.y = Mathf.Lerp(spS.y, hRatio, t);
+                    _spineT.localScale = spS;
+                    _lastUpperBodyScale = hRatio;
+                }
+            }
 
-            Vector3 rLS = _rUpperLegT.localScale;
-            rLS.y = Mathf.Lerp(rLS.y, lowerRatio, t);
-            _rUpperLegT.localScale = rLS;
+            // ── Lower body: HipMid → AnkleMid height only ──
+            if (hasAnkles && _lFootBoneT != null && _rFootBoneT != null)
+            {
+                Vector3 tAnkMid = (lAnk.position + rAnk.position) * 0.5f;
+                float trackedLowerH = Vector3.Distance(tHipMid, tAnkMid);
+
+                Vector3 aFootMid = (_lFootBoneT.position + _rFootBoneT.position) * 0.5f;
+                float avatarLowerH = Vector3.Distance(_hipsBoneT.position, aFootMid);
+
+                if (trackedLowerH > 0.05f && avatarLowerH > 0.01f)
+                {
+                    float hRatio = Mathf.Clamp((trackedLowerH / avatarLowerH) * lowBodyScale, 0.5f, 1.4f);
+
+                    Vector3 lLS = _lUpperLegT.localScale;
+                    lLS.y = Mathf.Lerp(lLS.y, hRatio, t);
+                    _lUpperLegT.localScale = lLS;
+
+                    Vector3 rLS = _rUpperLegT.localScale;
+                    rLS.y = Mathf.Lerp(rLS.y, hRatio, t);
+                    _rUpperLegT.localScale = rLS;
+                    _lastLowerBodyScale = hRatio;
+                }
+            }
         }
 
         #endregion
@@ -475,59 +500,49 @@ namespace ARHealthCare.Visuals
             var joints = data.Joints;
             if (joints == null) return;
 
-            joints.TryGetValue("LeftHip",        out Pose lHip);
-            joints.TryGetValue("RightHip",       out Pose rHip);
-            joints.TryGetValue("LeftShoulder",   out Pose lSh);
-            joints.TryGetValue("RightShoulder",  out Pose rSh);
+            joints.TryGetValue("LeftHip",       out Pose lHip);
+            joints.TryGetValue("RightHip",      out Pose rHip);
+            joints.TryGetValue("LeftShoulder",  out Pose lSh);
+            joints.TryGetValue("RightShoulder", out Pose rSh);
 
             bool hasHips      = joints.ContainsKey("LeftHip") && joints.ContainsKey("RightHip");
             bool hasShoulders = joints.ContainsKey("LeftShoulder") && joints.ContainsKey("RightShoulder");
+            bool hasNose = joints.TryGetValue("Nose", out Pose nosePose);
 
-            // We always need shoulders for rotation at minimum
-            if (!hasShoulders) return;
-
-            Vector3 shoulderMid = (lSh.position + rSh.position) * 0.5f;
             Vector3 hipsMid;
 
-            if (hasHips && !useOnlyHeadForRoot)
+            if (hasHips)
             {
-                // Normal path: hips visible
                 hipsMid = (lHip.position + rHip.position) * 0.5f;
                 _lastValidHipsMid = hipsMid;
                 _hasLastValidHipsMid = true;
             }
             else
             {
-                // ── Close-range fallback: no hips visible ──
-                // If Nose landmark is available, anchor avatar so that the avatar's
-                // Head bone matches the tracked Nose position. No verticalBodyOffset,
-                // no hips estimation. Scaling stays unchanged.
-                bool hasNose = joints.TryGetValue("Nose", out Pose nosePose);
+                // ── Close-range fallback: anchor Head bone to Nose landmark ──
                 if (hasNose && _headBoneT != null)
                 {
-                    // Offset from avatar root to head bone (current frame)
                     Vector3 rootToHead = _headBoneT.position - transform.position;
                     Vector3 noseTargetPos = nosePose.position - rootToHead;
 
                     transform.position = Vector3.Lerp(transform.position, noseTargetPos,
                                                       Time.deltaTime * positionLerpSpeed);
 
-                    // Rotation: use shoulders with Vector3.up (no hips→shoulders vector)
-                    if (hasShoulders && _cam != null)
+                    if (_cam != null)
                     {
-                        Vector3 noseToCam = (_cam.transform.position - nosePose.position).normalized;
-                        Vector3 noseFwd = noseToCam - Vector3.Dot(noseToCam, Vector3.up) * Vector3.up;
-                        if (noseFwd.sqrMagnitude > 0.01f)
+                        Vector3 toCam = (_cam.transform.position - nosePose.position).normalized;
+                        Vector3 fwd = toCam - Vector3.Dot(toCam, Vector3.up) * Vector3.up;
+                        if (fwd.sqrMagnitude > 0.01f)
                         {
-                            Quaternion noseRot = Quaternion.LookRotation(noseFwd.normalized, Vector3.up);
-                            transform.rotation = Quaternion.Slerp(transform.rotation, noseRot,
+                            Quaternion rot = Quaternion.LookRotation(fwd.normalized, Vector3.up);
+                            transform.rotation = Quaternion.Slerp(transform.rotation, rot,
                                                                   Time.deltaTime * rotationSlerpSpeed);
                         }
                     }
 
                     _animator.bodyPosition = transform.position;
                     _animator.bodyRotation = transform.rotation;
-                    return; // done — skip normal hips-based positioning below
+                    return;
                 }
                 else if (_hasLastValidHipsMid)
                 {
@@ -535,52 +550,28 @@ namespace ARHealthCare.Visuals
                 }
                 else
                 {
-                    return; // no way to position
+                    return;
                 }
             }
 
-            // Position: hips center + configurable offsets.
-            // verticalBodyOffset is calibrated at referenceDistance (1.7m).
-            // Scales proportionally with avatar size. Beyond maxVerticalOffsetDistance,
-            // upward offset is suppressed to avoid the avatar floating above the patient.
-            float currentScale = transform.localScale.x; // uniform scale
-
-            float camDist = referenceDistance;
-            if (_cam != null)
-                camDist = Mathf.Max(0.3f, Vector3.Distance(_cam.transform.position, hipsMid));
-
-            // Dynamic Offset: get estimated distance from camera clamped (1.5-2.5)
-            float clampedDist = Mathf.Clamp(camDist, referenceDistance - 0.8f, referenceDistance + 0.5f);
-            float scaleVOffsetFactor = referenceDistance / clampedDist;
-
-            float vOffset = verticalBodyOffset * currentScale * scaleVOffsetFactor;
-            if (camDist > maxVerticalOffsetDistance && vOffset > 0f)
-                vOffset = -0.05f; // suppress upward offset at long range
-
-            Vector3 targetPos = hipsMid
-                              + anchorOffset * currentScale
-                              + Vector3.up * vOffset;
+            // ── Position: hipsMid + simple vertical offset ──
+            Vector3 targetPos = hipsMid;
             transform.position = Vector3.Lerp(transform.position, targetPos,
                                               Time.deltaTime * positionLerpSpeed);
 
-            // Rotation: face camera, anatomical up from hips→shoulders
-            Vector3 anatomicalUp = (shoulderMid - hipsMid).normalized;
-            if (anatomicalUp.sqrMagnitude < 0.01f) return;
-
+            // ── Rotation: face camera, always world-up ──
+            // Using Vector3.up instead of tracked shoulder→hip vector avoids
+            // perspective-dependent tilt that causes rise at distance / drop at close range.
             if (_cam == null) { _cam = Camera.main; if (_cam == null) return; }
-            Vector3 toCam = (_cam.transform.position - hipsMid).normalized;
-            Vector3 fwd   = toCam - Vector3.Dot(toCam, anatomicalUp) * anatomicalUp;
-            if (fwd.sqrMagnitude < 0.01f)
-            {
-                fwd = _cam.transform.forward;
-                fwd = fwd - Vector3.Dot(fwd, anatomicalUp) * anatomicalUp;
-            }
+            Vector3 toCamR = (_cam.transform.position - hipsMid).normalized;
+            Vector3 fwdR = new Vector3(toCamR.x, 0f, toCamR.z).normalized;
+            if (fwdR.sqrMagnitude < 0.001f)
+                fwdR = _cam.transform.forward;
 
-            Quaternion targetRot = Quaternion.LookRotation(fwd.normalized, anatomicalUp);
+            Quaternion targetRot = Quaternion.LookRotation(fwdR, Vector3.up);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRot,
                                                   Time.deltaTime * rotationSlerpSpeed);
 
-            // Sync animator body with transform for IK solver consistency
             _animator.bodyPosition = transform.position;
             _animator.bodyRotation = transform.rotation;
         }
@@ -827,7 +818,7 @@ namespace ARHealthCare.Visuals
 
                 if (useAnchor)
                 {
-                    var anchor = mid + anchorOffset + Vector3.up * verticalBodyOffset;
+                    var anchor = mid + Vector3.up * verticalBodyOffset;
                     GLDrawCross(anchor, 0.06f, Color.yellow);
                     GLDrawLine(mid, anchor, Color.yellow);
                 }
@@ -920,7 +911,7 @@ namespace ARHealthCare.Visuals
                 Gizmos.DrawWireSphere(mid, 0.05f);
                 if (useAnchor)
                 {
-                    var anchor = mid + anchorOffset;
+                    var anchor = mid + Vector3.up * verticalBodyOffset;
                     Gizmos.color = Color.yellow;
                     Gizmos.DrawWireSphere(anchor, 0.08f);
                     Gizmos.DrawLine(mid, anchor);

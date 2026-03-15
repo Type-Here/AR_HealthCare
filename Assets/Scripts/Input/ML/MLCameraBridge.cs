@@ -4,9 +4,17 @@ using UnityEngine;
 using UnityEngine.Android;
 using UnityEngine.XR.MagicLeap;
 using MagicLeap.Android;
+using System.Collections.Generic;
 
 namespace ARHealthCare.Input
 {
+    public enum MLCameraResolution
+    {
+        R640x480,
+        R1280x720,
+        R1920x1080
+    }
+
     /// <summary>
     /// MLCameraBridge
     /// -------------
@@ -26,11 +34,13 @@ namespace ARHealthCare.Input
     public class MLCameraBridge : MonoBehaviour
     {
         [Header("Capture Target")]
-        [SerializeField] private int captureWidth = 640;
-        [SerializeField] private int captureHeight = 480;
+        [SerializeField] private MLCameraResolution resolution = MLCameraResolution.R640x480;
+        
+        private int captureWidth = 640;
+        private int captureHeight = 480;
 
         [Tooltip("Main = RGB POV. CV = stream for Computer Vision.")]
-        [SerializeField] private MLCamera.Identifier cameraId = MLCamera.Identifier.Main;
+        [SerializeField] private MLCamera.Identifier cameraId = MLCamera.Identifier.CV;
         
         [SerializeField] private MLCamera.CaptureFrameRate frameRate = MLCamera.CaptureFrameRate._30FPS;
 
@@ -44,9 +54,27 @@ namespace ARHealthCare.Input
         private bool _cameraDeviceAvailable;
         private bool _isCapturing;
 
+        private Dictionary<MLCameraResolution, (int, int)> _resolutionMap = new Dictionary<MLCameraResolution, (int, int)>
+        {
+            { MLCameraResolution.R640x480, (640, 480) },
+            { MLCameraResolution.R1280x720, (1280, 720) },
+            { MLCameraResolution.R1920x1080, (1920, 1080) }
+        };
+
         private void OnEnable()
         {
             RequestCameraPermission();
+            if (_resolutionMap.TryGetValue(resolution, out var dims))
+            {
+                captureWidth = dims.Item1;
+                captureHeight = dims.Item2;
+            }
+            else
+            {
+                Debug.LogWarning($"MLCameraBridge: risoluzione non riconosciuta, uso default 640x480.");
+                captureWidth = 640;
+                captureHeight = 480;
+            }
         }
 
           private void OnDisable()

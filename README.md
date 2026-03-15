@@ -138,6 +138,120 @@ Packages/
 
 ---
 
+## First-time Setup on a New Machine
+
+When cloning this repository on a new machine, most files are tracked in git **except the MediaPipe model binaries** (`Assets/StreamingAssets/*.bytes`), which are too large to commit and must be downloaded separately. Everything else (native libraries, packages, manifest) is versioned and will be present after a normal clone.
+
+### 1 — MediaPipe model files (StreamingAssets)
+
+The pose inference model binaries are loaded at runtime from `Assets/StreamingAssets/`. This folder is empty in the repo.
+
+Place the following files in `Assets/StreamingAssets/`:
+
+| File | Model | Source |
+|------|-------|--------|
+| `pose_landmarker_full.bytes` | BlazePose Full (**default**) | Download → rename `.task` → `.bytes` |
+| `pose_landmarker_lite.bytes` | BlazePose Lite | Download → rename `.task` → `.bytes` |
+| `pose_landmarker_heavy.bytes` | BlazePose Heavy | Download → rename `.task` → `.bytes` |
+
+Download URLs (Google MediaPipe):
+```
+https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_full/float16/1/pose_landmarker_full.task
+https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_lite/float16/1/pose_landmarker_lite.task
+https://storage.googleapis.com/mediapipe-models/pose_landmarker/pose_landmarker_heavy/float16/1/pose_landmarker_heavy.task
+```
+
+> **Why these are missing**: `Assets/StreamingAssets/` is **not excluded** by `.gitignore` (only the Addressables sub-path `aa*` is excluded), but the `.bytes` model files were never committed because of their size (~25–30 MB each). They must always be downloaded separately from Google.
+
+> **Why tracking fails silently**: `Bootstrap.cs` calls `AssetLoader.PrepareAssetAsync(config.ModelPath)` which maps to `StreamingAssetsResourceManager`. If the file is missing, `PoseLandmarkerRunner.Run()` exits early with no output — tracking never starts and no obvious error is shown.
+
+---
+
+### 2 — MediaPipe Unity Plugin package
+
+The repo does not includes the `.tgz` at `Packages/com.github.homuler.mediapipe-0.16.3/com.github.homuler.mediapipe-0.16.3.tgz` and it is tracked in git — **no action needed on a standard clone**.
+
+The `.tgz` contains pre-compiled native libraries, so it must match the **target CPU architecture and OS**. The version used in this project is **0.16.3** built for Android ARM64 (Magic Leap 2 target).
+
+**If you need to build the package for x86/64 for the Magic Leap 2:**
+
+1. Go to **[homuler/MediaPipeUnityPlugin Releases](https://github.com/homuler/MediaPipeUnityPlugin/releases/tag/v0.16.3)** — pre-built `.tgz` packages for common targets are attached to each release.
+2. If the pre-built package is not available, use the **GitHub Actions workflows** in the repo ([`.github/workflows/`](https://github.com/homuler/MediaPipeUnityPlugin/tree/master/.github/workflows)) to build for your specific architecture:
+   - Fork or clone the repo, trigger the relevant workflow (e.g., `build_android.yml`), and download the artifact.
+3. Replace the file at:
+   ```
+   AR_HealthCare/Packages/com.github.homuler.mediapipe-0.16.3/com.github.homuler.mediapipe-0.16.3.tgz
+   ```
+4. Re-import the package in Unity (right-click `Packages/manifest.json` → **Reimport**).
+
+---
+
+### 3 — Magic Leap SDK local packages
+
+The two Magic Leap packages are stored as local `.tgz` archives. Verify each folder contains its archive:
+
+```
+AR_HealthCare/Packages/com.magicleap.setuptool/      ← must contain com.magicleap.setuptool-*.tgz
+AR_HealthCare/Packages/com.magicleap.unitysdk/       ← must contain com.magicleap.unitysdk-*.tgz
+```
+
+If missing, obtain them from the Magic Leap Developer Portal or copy from the original machine.
+
+---
+
+### 4 — Android native library and Gradle template
+
+Both files are **tracked in git** (neither `*.so` nor `*.gradle` are excluded by `.gitignore`) and will be present after a normal clone:
+
+| File | Location | Notes |
+|------|----------|---------|
+| `libc++_shared.so` | `Assets/Plugins/Android/` | C++ shared runtime — in repo |
+| `mainTemplate.gradle` | `Assets/Plugins/Android/` | Custom Gradle config — in repo |
+
+`libc++_shared.so` is missing (e.g. corrupted clone), you can extract it from the Android NDK (`<NDK>/toolchains/llvm/prebuilt/<host>/sysroot/usr/lib/aarch64-linux-android/`) or copy it from another working checkout. A missing `.so` causes a `java.lang.UnsatisfiedLinkError` crash at app startup.
+
+---
+
+### 5 — Android Build Settings: Application Entry Point
+
+Magic Leap 2 requires `Activity`-based entry point. `GameActivity` is not supported.
+
+**In Unity:**
+1. Go to **Edit → Project Settings → Player → Android → Other Settings → Configuration**
+2. Find **Application Entry Point**
+3. Select **Activity only** — deselect `GameActivity`
+
+**Verify `Assets/Plugins/Android/AndroidManifest.xml`:**
+
+The manifest should only contain the `Activity` block. If you regenerated it or it shows a `GameActivity` section, open the file and remove it (it is clearly marked by comments). The manifest in this repo is already correct if cloned without modifications.
+
+> **Symptom when wrong**: the app installs but immediately crashes or shows a black screen, never reaching Unity `Start()`.
+
+---
+
+### Quick checklist before first build
+
+```
+# ── Must be obtained manually (NOT in git) ──────────────────────────────────
+[ ] Assets/StreamingAssets/pose_landmarker_full.bytes        download from Google (see §1)
+[ ] Assets/StreamingAssets/pose_landmarker_lite.bytes        optional
+[ ] Assets/StreamingAssets/pose_landmarker_heavy.bytes       optional
+[ ] Packages/com.github.homuler.mediapipe-0.16.3/*.tgz       required
+[ ] Assets/Plugins/Android/libc++_shared.so                  required
+
+# ── In git — just verify after clone ────────────────────────────────────────
+
+[ ] Packages/com.magicleap.setuptool/*.tgz                   present
+[ ] Packages/com.magicleap.unitysdk/*.tgz                    present
+[ ] Assets/Plugins/Android/mainTemplate.gradle               present
+
+# ── Unity settings (one-time, per machine) ───────────────────────────────────
+[ ] Player Settings → Application Entry Point = Activity only
+[ ] AndroidManifest.xml → no GameActivity block
+```
+
+---
+
 ## Hybrid IK System
 
 The active IK driver is `HybridAvatarIK` — a two-phase approach that combines the stability of Unity's built-in 2-bone solver with post-IK direct bone correction:
@@ -212,6 +326,10 @@ Controller bindings (OpenXR):
 
 | Problem | Fix |
 |---------|-----|
+| **Tracking works on original machine but not on new machine** | See [First-time Setup](#first-time-setup-on-a-new-machine) — model files and native libraries are not in git |
+| No MediaPipe output after build | `Assets/StreamingAssets/pose_landmarker_full.bytes` missing — download and rename the `.task` file |
+| App crashes on device immediately | `libc++_shared.so` missing from `Assets/Plugins/Android/` or wrong Application Entry Point |
+| App installs but shows black screen | Application Entry Point includes `GameActivity` — set to `Activity` only in Player Settings |
 | Avatar not moving in Editor | Enable `useMockData` on `SceneTrackerSetup` |
 | Avatar too high/low | Adjust `verticalBodyOffset` on `HybridAvatarIK` |
 | Avatar too small/large | Adjust `referenceBodyHeight` or use `manualAvatarScale` |
@@ -222,6 +340,7 @@ Controller bindings (OpenXR):
 | Camera feed is black | Verify `ARFCameraBridge` has `ARCameraManager` assigned; check camera permission |
 | Native crash on device | Do **not** call `PoseLandmarkerRunner.Play()` manually — it's managed by Bootstrap |
 | No MediaPipe output | Check `PoseLandmarkerRunner.isRunning`; verify Bootstrap completed initialization |
+| Package compile errors after clone | MediaPipe `.tgz` may be wrong architecture — replace with x86\_64 build from drive |
 
 </details>
 
