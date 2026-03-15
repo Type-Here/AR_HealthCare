@@ -55,9 +55,9 @@ AR HealthCare is a Unity-based augmented reality application that overlays a 3D 
 ┌──────────────────────────────────────────────────────────────────────┐
 │                        AR HEADSET CAMERA                             │
 │                    (Magic Leap 2 / AR Foundation)                    │
-└─────────────┬────────────────────────────────────────────────────────┘
-              │
-              ▼
+└─────────────────────────────────────────────┬────────────────────────┘
+                                              │
+                                              ▼
 ┌─────────────────────────┐     ┌──────────────────────────┐
 │   ARFCameraBridge        │     │   MLCameraBridge          │
 │   (AR Foundation path)   │     │   (Magic Leap native)     │
@@ -261,6 +261,12 @@ Key dependencies (from `Packages/manifest.json`):
 | `com.unity.render-pipelines.universal` | 17.2.0 | URP rendering pipeline |
 | `com.unity.animation.rigging` | 1.4.0 | Animation Rigging (available for future IK enhancements) |
 | `com.magicleap.setuptool` | local | Magic Leap project setup tool |
+
+---
+
+**Important Note about AR Foundation**:
+> While declared here and in root `README` as dependency, AR Foundation is **incompatible** with latest Magic Leap 2 packages and **was not used** actively in this project.
+> We provided a bridge connection to Mediapipe for AR Foundantion compatible device as alternative module for portability.
 
 ### Docs
 
