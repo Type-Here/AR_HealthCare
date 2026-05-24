@@ -29,7 +29,9 @@ namespace MagicLeap.SetupTool.Editor.Setup
 #if UNITY_EDITOR_OSX
         public const string EDITOR_MANIFEST_PATH = "PlaybackEngines/AndroidPlayer/Apk/UnityManifest.xml";
 #elif UNITY_EDITOR_WIN
-       public const string EDITOR_MANIFEST_PATH = "Data/PlaybackEngines/AndroidPlayer/Apk/UnityManifest.xml";
+        public const string EDITOR_MANIFEST_PATH = "Data/PlaybackEngines/AndroidPlayer/Apk/UnityManifest.xml";
+#elif UNITY_EDITOR_LINUX
+        public const string EDITOR_MANIFEST_PATH = "Data/PlaybackEngines/AndroidPlayer/Apk/UnityManifest.xml";
 #endif
 
 
