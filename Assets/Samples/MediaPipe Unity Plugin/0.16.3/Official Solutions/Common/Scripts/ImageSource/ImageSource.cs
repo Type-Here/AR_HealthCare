@@ -31,12 +31,16 @@ namespace Mediapipe.Unity
       {
         width = resolution.width;
         height = resolution.height;
-        frameRate = resolution.refreshRate;
+        frameRate = resolution.refreshRateRatio.value;
       }
 
       public Resolution ToResolution()
       {
-        return new Resolution() { width = width, height = height, refreshRate = (int)frameRate };
+        var r = new Resolution();
+        r.width = width;
+        r.height = height;
+        r.refreshRateRatio = new RefreshRate { numerator = (uint)frameRate, denominator = 1 };
+        return r;
       }
 
       public override string ToString()
