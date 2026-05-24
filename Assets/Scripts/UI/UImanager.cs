@@ -1,4 +1,5 @@
 using UnityEngine;
+using TMPro;
 using ARHealthCare.Core;
 
 
@@ -18,6 +19,12 @@ namespace ARHealthCare.UI
         [Header("Core Components")]
         [Tooltip("Reference to the UITracking component")]
         public UITracking uiTracking;
+
+        [Header("Avatar Toggle")]
+        [Tooltip("Optional label on the Toggle Avatar button — text is updated when toggled")]
+        [SerializeField] private TextMeshProUGUI _toggleAvatarButtonLabel;
+
+        private bool _avatarHidden;
 
         void Start()
         {
@@ -78,6 +85,26 @@ namespace ARHealthCare.UI
         }
 
         // =========================
+        // TOGGLE AVATAR VISIBILITY
+        // =========================
+        public void ToggleAvatarVisibility()
+        {
+            if (_avatarHidden)
+            {
+                uiTracking.StartTrackingFromCore();
+                _avatarHidden = false;
+            }
+            else
+            {
+                uiTracking.HideOnlyAvatar();
+                _avatarHidden = true;
+            }
+
+            if (_toggleAvatarButtonLabel != null)
+                _toggleAvatarButtonLabel.text = _avatarHidden ? "Show Avatar" : "Hide Avatar";
+        }
+
+        // =========================
         // RESET STATE
         // =========================
         private void ShowMainMenu()
@@ -87,7 +114,11 @@ namespace ARHealthCare.UI
 
             mainMenuFade.gameObject.SetActive(true);
             mainMenuFade.canvasGroup.alpha = 1f;
-            mainMenuFade.canvasGroup.interactable = true;  
+            mainMenuFade.canvasGroup.interactable = true;
+
+            _avatarHidden = false;
+            if (_toggleAvatarButtonLabel != null)
+                _toggleAvatarButtonLabel.text = "Hide Avatar";
         }
 
     }
