@@ -9,6 +9,7 @@ using TMPro;
 using ARHealthCare.Input;
 using ARHealthCare.Network;
 using ZXing;
+using ZXing.Common;
 
 namespace ARHealthCare.AI
 {
@@ -23,15 +24,11 @@ namespace ARHealthCare.AI
         [Header("UI")]
         [SerializeField] private TextMeshProUGUI _statusLabel;
 
-        private BarcodeReader _reader;
+        private MultiFormatReader _qrReader;
 
         private void Awake()
         {
-            _reader = new BarcodeReader
-            {
-                AutoRotate = true,
-                Options = { TryHarder = true }
-            };
+            _qrReader = new MultiFormatReader();
         }
 
         /// <summary>Call from the "Scan QR" button onClick event.</summary>
@@ -51,16 +48,33 @@ namespace ARHealthCare.AI
             }
 
             var pixels = frame.GetPixels32();
-            var result = _reader.Decode(pixels, frame.width, frame.height);
-            Destroy(frame); // free the copy
+            int w = frame.width, h = frame.height;
+            Destroy(frame);
 
-            if (result == null)
+            byte[] rgb = new byte[pixels.Length * 3];
+            for (int i = 0; i < pixels.Length; i++)
+            {
+                rgb[i * 3]     = pixels[i].r;
+                rgb[i * 3 + 1] = pixels[i].g;
+                rgb[i * 3 + 2] = pixels[i].b;
+            }
+
+            Result qrResult = null;
+            try
+            {
+                var source = new RGBLuminanceSource(rgb, w, h);
+                var bitmap = new BinaryBitmap(new HybridBinarizer(source));
+                qrResult = _qrReader.decode(bitmap);
+            }
+            catch { }
+
+            if (qrResult == null)
             {
                 ShowStatus("No QR code found — hold steady");
                 return;
             }
 
-            string patientId = result.Text.Trim();
+            string patientId = qrResult.Text.Trim();
             ShowStatus($"QR detected: {patientId}");
             StartCoroutine(LoadPatient(patientId));
         }
