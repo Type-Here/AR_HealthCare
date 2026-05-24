@@ -187,3 +187,11 @@ Desktop.ini
 
 # Ignore github directory
 .github/
+
+
+# Ignore Internal Docs
+*.md
+
+^Pipeline.md$
+^README.md$
+^CHANGELOG.md$
