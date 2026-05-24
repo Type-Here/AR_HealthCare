@@ -152,7 +152,7 @@ namespace ARHealthCare.Trackers
                 // Subtracting this gives each joint's offset RELATIVE to the body root,
                 // which is coordinate-system independent and safe to scale/rotate.
                 Vector3 hipsCenterMP = Vector3.zero;
-                if (landmarks.Count > 24)
+                if (landmarks.Count >= 25)
                 {
                     hipsCenterMP = new Vector3(
                         (landmarks[23].x + landmarks[24].x) * 0.5f,
