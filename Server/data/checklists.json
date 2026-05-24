@@ -1,0 +1,52 @@
+{
+  "orthopedics": [
+    "Vital signs (HR, BP, SpO2, temp)",
+    "Pain assessment (VAS 0-10, location, character)",
+    "Range of motion — active and passive",
+    "Neurovascular check (sensation, pulses distal to injury)",
+    "Swelling / effusion assessment",
+    "Ligament stability tests (Lachman, pivot shift for ACL)",
+    "Muscle strength testing",
+    "Gait observation",
+    "Review pre-op imaging (X-ray, MRI)",
+    "Confirm consent and surgical plan",
+    "Pre-op labs / anticoagulation status",
+    "Physiotherapy progress review"
+  ],
+  "neurology": [
+    "Mental status and orientation (GCS if indicated)",
+    "Cranial nerve exam (I–XII)",
+    "Motor assessment (strength, tone, reflexes)",
+    "Sensory exam (light touch, pinprick, proprioception)",
+    "Cerebellar function (finger-nose, heel-shin, gait)",
+    "Review neuroimaging (CT/MRI)",
+    "Medication review (anticonvulsants, anticoagulants)",
+    "Seizure history and triggers",
+    "Swallowing assessment if brainstem involved",
+    "Falls risk evaluation"
+  ],
+  "cardiology": [
+    "Vital signs (HR, BP bilateral, SpO2, weight)",
+    "Cardiac auscultation (S1/S2, murmurs, rubs)",
+    "JVP assessment",
+    "Peripheral edema check",
+    "Pulmonary auscultation (crackles, wheeze)",
+    "12-lead ECG review",
+    "Review recent echocardiogram",
+    "Medication adherence (antiplatelet, statin, ACEI/ARB, beta-blocker)",
+    "NYHA functional class",
+    "Chest pain / dyspnea characterization",
+    "BNP / troponin if indicated"
+  ],
+  "general": [
+    "Chief complaint and history of presenting illness",
+    "Vital signs",
+    "Systematic physical examination",
+    "Review current medications",
+    "Allergy verification",
+    "Lab results review",
+    "Imaging review",
+    "Patient concerns and questions",
+    "Discharge / follow-up plan"
+  ]
+}
