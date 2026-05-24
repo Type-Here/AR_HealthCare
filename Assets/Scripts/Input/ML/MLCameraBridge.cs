@@ -46,13 +46,20 @@ namespace ARHealthCare.Input
 
         [Header("Runtime")]
         public Texture CurrentCameraTexture { get; private set; }
-        
+
         public bool IsReady => CurrentCameraTexture != null;
         public bool IsCapturing => _isCapturing;
         private Texture2D _videoTextureRgba;
         private MLCamera _camera;
         private bool _cameraDeviceAvailable;
         private bool _isCapturing;
+
+        // Thread-safe staging buffer: camera callback buffers bytes here,
+        // Update() applies them to the Texture2D on the main thread.
+        private byte[] _pendingFrameData;
+        private int _pendingFrameWidth;
+        private int _pendingFrameHeight;
+        private readonly object _frameLock = new object();
 
         private Dictionary<MLCameraResolution, (int, int)> _resolutionMap = new Dictionary<MLCameraResolution, (int, int)>
         {
@@ -201,59 +208,89 @@ namespace ARHealthCare.Input
                 _videoTextureRgba = null;
                 CurrentCameraTexture = null;
             }
+
+            lock (_frameLock)
+            {
+                _pendingFrameData = null;
+            }
         }
 
+        // Runs on the ML camera callback thread — only copies bytes, no Unity API calls.
         private void OnRawVideoFrameAvailable(MLCamera.CameraOutput output, MLCamera.ResultExtras extras, MLCameraBase.Metadata metadata)
         {
             if (output.Format != MLCamera.OutputFormat.RGBA_8888)
                 return;
 
-            // Evita immagine capovolta
             MLCamera.FlipFrameVertically(ref output);
 
             var plane = output.Planes[0];
-            UpdateRGBATexture(ref _videoTextureRgba, plane);
-
-            CurrentCameraTexture = _videoTextureRgba;
-        }
-
-        private static void UpdateRGBATexture(ref Texture2D tex, MLCamera.PlaneInfo plane)
-        {
             int w = (int)plane.Width;
             int h = (int)plane.Height;
+            int actualRowBytes = (int)(plane.Width * plane.PixelStride);
 
-            if (tex != null && (tex.width != w || tex.height != h))
+            byte[] packed;
+            if (plane.Stride != actualRowBytes)
             {
-                UnityEngine.Object.Destroy(tex);
-                tex = null;
+                packed = new byte[actualRowBytes * h];
+                for (int row = 0; row < h; row++)
+                    Buffer.BlockCopy(plane.Data, (int)(row * plane.Stride), packed, row * actualRowBytes, actualRowBytes);
+            }
+            else
+            {
+                packed = new byte[plane.Data.Length];
+                Buffer.BlockCopy(plane.Data, 0, packed, 0, plane.Data.Length);
             }
 
-            if (tex == null)
+            lock (_frameLock)
             {
-                tex = new Texture2D(w, h, TextureFormat.RGBA32, false)
+                _pendingFrameData = packed;
+                _pendingFrameWidth = w;
+                _pendingFrameHeight = h;
+            }
+        }
+
+        // Runs on the Unity main thread — applies the buffered frame to the Texture2D.
+        private void Update()
+        {
+            byte[] data;
+            int w, h;
+            lock (_frameLock)
+            {
+                if (_pendingFrameData == null) return;
+                data = _pendingFrameData;
+                w    = _pendingFrameWidth;
+                h    = _pendingFrameHeight;
+                _pendingFrameData = null;
+            }
+
+            if (_videoTextureRgba != null && (_videoTextureRgba.width != w || _videoTextureRgba.height != h))
+            {
+                Destroy(_videoTextureRgba);
+                _videoTextureRgba = null;
+            }
+
+            if (_videoTextureRgba == null)
+            {
+                _videoTextureRgba = new Texture2D(w, h, TextureFormat.RGBA32, false)
                 {
                     wrapMode = TextureWrapMode.Clamp,
                     filterMode = FilterMode.Bilinear
                 };
             }
 
-            // Gestione stride/pixelStride come negli esempi ML
-            int actualRowBytes = (int)(plane.Width * plane.PixelStride);
-            if (plane.Stride != actualRowBytes)
-            {
-                var packed = new byte[actualRowBytes * plane.Height];
-                for (int row = 0; row < plane.Height; row++)
-                {
-                    Buffer.BlockCopy(plane.Data, (int)(row * plane.Stride), packed, row * actualRowBytes, actualRowBytes);
-                }
-                tex.LoadRawTextureData(packed);
-            }
-            else
-            {
-                tex.LoadRawTextureData(plane.Data);
-            }
+            _videoTextureRgba.LoadRawTextureData(data);
+            _videoTextureRgba.Apply(false);
+            CurrentCameraTexture = _videoTextureRgba;
+        }
 
-            tex.Apply(false);
+        /// <summary>Returns a copy of the current camera frame as a new Texture2D for QR/face capture.</summary>
+        public Texture2D CaptureCurrentFrameAsTexture2D()
+        {
+            if (_videoTextureRgba == null) return null;
+            var copy = new Texture2D(_videoTextureRgba.width, _videoTextureRgba.height, TextureFormat.RGBA32, false);
+            copy.SetPixels32(_videoTextureRgba.GetPixels32());
+            copy.Apply();
+            return copy;
         }
     }
 }
