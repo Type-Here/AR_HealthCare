@@ -45,16 +45,14 @@ namespace ARHealthCare.AI
         [Header("Status")]
         [SerializeField] private TextMeshProUGUI _statusLabel;
 
-        [Header("Toggle Button")]
-        [Tooltip("The Background / panel body — hidden when panel is collapsed")]
-        [SerializeField] private GameObject _panelRoot;
-        [Tooltip("Small circle badge that appears over the toggle button")]
+        [Header("Notification Badge")]
+        [Tooltip("Badge GameObject on the Holo toggle button in UIButtonsCanvas - shown when new content arrives while panel is closed")]
         [SerializeField] private GameObject _notificationBadge;
         [SerializeField] private TextMeshProUGUI _notificationCount;
 
         private PatientRecord _currentPatient;
         private string _currentMode = "student";
-        private bool _panelOpen = true;
+        private bool _panelOpen;
         private int _pendingCount;
 
         private void Start()
@@ -108,11 +106,17 @@ namespace ARHealthCare.AI
             StartCoroutine(FetchSuggestion());
         }
 
-        public void TogglePanel()
+        // Called by UIManager when the Holo canvas is shown
+        public void OnPanelOpened()
         {
-            _panelOpen = !_panelOpen;
-            if (_panelRoot != null) _panelRoot.SetActive(_panelOpen);
-            if (_panelOpen) ClearNotifications();
+            _panelOpen = true;
+            ClearNotifications();
+        }
+
+        // Called by UIManager when the Holo canvas is hidden
+        public void OnPanelClosed()
+        {
+            _panelOpen = false;
         }
 
         public void OnModeClicked()
