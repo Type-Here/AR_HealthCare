@@ -192,6 +192,17 @@ Desktop.ini
 # Ignore Internal Docs
 *.md
 
+# Ignore pycache
+__pycache__/
+
+# Face recognition
+Server/face_db/**/*.jpg
+Server/face_db/**/*.jpeg
+Server/face_db/**/*.png
+Server/face_db/**/*.webp
+# Indice DeepFace
+Server/face_db/.deepface/
+
 ^Pipeline.md$
 ^README.md$
 ^CHANGELOG.md$

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AR HealthCare — Gestione Pazienti</title>
+<link rel="stylesheet" href="/admin.css" />
+</head>
+<body>
+
+<header>
+  <h1>🏥 AR HealthCare — Gestione Pazienti</h1>
+  <span id="server-status">Caricamento…</span>
+</header>
+
+<div class="layout">
+
+  <!-- ── Lista pazienti ── -->
+  <section>
+    <div class="section-header">
+      <h2>Pazienti registrati</h2>
+      <button class="btn btn-primary" onclick="openAdd()">＋ Aggiungi paziente</button>
+    </div>
+    <div id="patient-list">
+      <div class="empty-state">Caricamento pazienti…</div>
+    </div>
+  </section>
+
+  <!-- ── Pannello destra (add / view / edit) ── -->
+  <aside id="form-panel">
+
+    <div class="panel-header">
+      <span id="panel-title"></span>
+      <span class="mode-badge" id="mode-badge"></span>
+    </div>
+
+    <div class="field">
+      <label for="f-id">ID paziente <span class="req">*</span></label>
+      <input id="f-id" type="text" placeholder="es. mario_rossi" oninput="autoId(this)" />
+      <div class="field-hint">Solo lettere minuscole, numeri e underscore. Niente spazi.</div>
+      <div class="field-err" id="err-id"></div>
+    </div>
+
+    <div class="field">
+      <label for="f-name">Nome completo <span class="req">*</span></label>
+      <input id="f-name" type="text" placeholder="es. Mario Rossi" />
+      <div class="field-err" id="err-name"></div>
+    </div>
+
+    <div class="field">
+      <label for="f-age">Età <span class="req">*</span></label>
+      <input id="f-age" type="number" min="0" max="150" placeholder="es. 45" />
+      <div class="field-err" id="err-age"></div>
+    </div>
+
+    <div class="field">
+      <label for="f-diag">Diagnosi <span class="req">*</span></label>
+      <input id="f-diag" type="text" placeholder="es. Ernia del disco L4-L5" />
+      <div class="field-err" id="err-diag"></div>
+    </div>
+
+    <div class="field">
+      <label for="f-spec">Specialità <span class="req">*</span></label>
+      <select id="f-spec">
+        <option value="">— seleziona —</option>
+        <option value="orthopedics">Ortopedia (orthopedics)</option>
+        <option value="neurology">Neurologia (neurology)</option>
+        <option value="cardiology">Cardiologia (cardiology)</option>
+        <option value="general">Medicina generale (general)</option>
+      </select>
+      <div class="field-err" id="err-spec"></div>
+    </div>
+
+    <div class="field">
+      <label for="f-proc">Procedura pianificata <span class="req">*</span></label>
+      <input id="f-proc" type="text" placeholder="es. Microdiscectomia" />
+      <div class="field-err" id="err-proc"></div>
+    </div>
+
+    <div class="field">
+      <label for="f-date">Data procedura <span class="req">*</span></label>
+      <input id="f-date" type="text" placeholder="es. 10 Giugno 2026" />
+      <div class="field-err" id="err-date"></div>
+    </div>
+
+    <div class="field">
+      <label for="f-treat">Trattamento attuale <span class="req">*</span></label>
+      <input id="f-treat" type="text" placeholder="es. FANS, fisioterapia" />
+      <div class="field-err" id="err-treat"></div>
+    </div>
+
+    <div class="field">
+      <label for="f-hist">Storia medica <span style="color:var(--sky-blue);font-weight:400">(opzionale)</span></label>
+      <input id="f-hist" type="text" placeholder="es. Ipertensione, Diabete tipo 2" />
+      <div class="field-hint">Separare le voci con una virgola.</div>
+    </div>
+
+    <div class="field">
+      <label for="f-notes">Note <span style="color:var(--sky-blue);font-weight:400">(opzionale)</span></label>
+      <textarea id="f-notes" placeholder="Note aggiuntive sul paziente…"></textarea>
+    </div>
+
+    <!-- Add mode -->
+    <div id="actions-add" class="form-actions" hidden>
+      <button class="btn btn-ghost" onclick="closePanel()">Annulla</button>
+      <button class="btn btn-primary" id="btn-add" onclick="submitAdd()">
+        <span class="spinner" id="spinner-add"></span>
+        Salva paziente
+      </button>
+    </div>
+
+    <!-- View mode -->
+    <div id="actions-view" class="form-actions" hidden>
+      <button class="btn btn-danger" onclick="deletePatient()">🗑 Elimina</button>
+      <button class="btn btn-ghost" onclick="closePanel()">Chiudi</button>
+      <button class="btn btn-primary" onclick="openEdit()">Modifica</button>
+    </div>
+
+    <!-- Edit mode -->
+    <div id="actions-edit" class="form-actions" hidden>
+      <button class="btn btn-ghost" onclick="cancelEdit()">Chiudi</button>
+      <button class="btn btn-primary" id="btn-edit" onclick="submitEdit()">
+        <span class="spinner" id="spinner-edit"></span>
+        Salva modifiche
+      </button>
+    </div>
+
+  </aside>
+
+</div>
+
+<div id="toast"></div>
+
+<script src="/admin.js"></script>
+</body>
+</html>

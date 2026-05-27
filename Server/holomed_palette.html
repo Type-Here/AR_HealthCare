@@ -1,0 +1,130 @@
+<style>
+.pal-section { margin-bottom: 2rem; }
+.pal-label { font-size: 11px; font-weight: 500; letter-spacing: 1.5px; color: #5F5E5A; text-transform: uppercase; margin-bottom: 10px; }
+.pal-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.swatch { border-radius: 10px; padding: 10px 12px; min-width: 120px; flex: 1; }
+.swatch-name { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+.swatch-hex { font-size: 11px; font-family: monospace; opacity: 0.75; }
+.swatch-use { font-size: 10px; margin-top: 4px; opacity: 0.65; }
+.divider { height: 0.5px; background: #D3D1C7; margin: 1.5rem 0; }
+</style>
+
+<h2 class="sr-only">Palette colori HoloMed ispirata al logo del gufo</h2>
+
+<div class="pal-section">
+  <div class="pal-label">Solidi — struttura UI</div>
+  <div class="pal-row">
+    <div class="swatch" style="background:#0A0F1E; color:#85B7EB;">
+      <div class="swatch-name">Abyss</div>
+      <div class="swatch-hex">#0A0F1E</div>
+      <div class="swatch-use">background panel principale</div>
+    </div>
+    <div class="swatch" style="background:#0D1B3E; color:#85B7EB;">
+      <div class="swatch-name">Deep Navy</div>
+      <div class="swatch-hex">#0D1B3E</div>
+      <div class="swatch-use">background panel secondario</div>
+    </div>
+    <div class="swatch" style="background:#1A2E5A; color:#B5D4F4;">
+      <div class="swatch-name">Navy Mid</div>
+      <div class="swatch-hex">#1A2E5A</div>
+      <div class="swatch-use">card, header panel</div>
+    </div>
+    <div class="swatch" style="background:#2A4A8A; color:#E6F1FB;">
+      <div class="swatch-name">Blue Body</div>
+      <div class="swatch-hex">#2A4A8A</div>
+      <div class="swatch-use">bottoni, badge</div>
+    </div>
+  </div>
+</div>
+
+<div class="pal-section">
+  <div class="pal-label">Accenti — interazione e highlight</div>
+  <div class="pal-row">
+    <div class="swatch" style="background:#00C8F0; color:#0A0F1E;">
+      <div class="swatch-name">Holo Cyan</div>
+      <div class="swatch-hex">#00C8F0</div>
+      <div class="swatch-use">visore, focus, accento primario</div>
+    </div>
+    <div class="swatch" style="background:#5BB8E8; color:#0A0F1E;">
+      <div class="swatch-name">Sky Blue</div>
+      <div class="swatch-hex">#5BB8E8</div>
+      <div class="swatch-use">testo su dark, icone attive</div>
+    </div>
+    <div class="swatch" style="background:#FFFFFF; color:#0A0F1E;">
+      <div class="swatch-name">Pure White</div>
+      <div class="swatch-hex">#FFFFFF</div>
+      <div class="swatch-use">croce medica, testo primario</div>
+    </div>
+    <div class="swatch" style="background:#FF4C6A; color:#FFFFFF;">
+      <div class="swatch-name">Alert Red</div>
+      <div class="swatch-hex">#FF4C6A</div>
+      <div class="swatch-use">highlight patologia, warning</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="pal-section">
+  <div class="pal-label">Alpha — per AR su Magic Leap (semi-trasparente)</div>
+  <div class="pal-row">
+    <div class="swatch" style="background:rgba(10,15,30,0.82); color:#85B7EB; border: 0.5px solid rgba(91,184,232,0.3);">
+      <div class="swatch-name">Panel BG</div>
+      <div class="swatch-hex">rgba(10,15,30, <strong>0.82</strong>)</div>
+      <div class="swatch-use">panel principale — leggibile in trasmissione</div>
+    </div>
+    <div class="swatch" style="background:rgba(26,46,90,0.70); color:#B5D4F4; border: 0.5px solid rgba(91,184,232,0.25);">
+      <div class="swatch-name">Card BG</div>
+      <div class="swatch-hex">rgba(26,46,90, <strong>0.70</strong>)</div>
+      <div class="swatch-use">card interna, sezioni</div>
+    </div>
+    <div class="swatch" style="background:rgba(0,200,240,0.12); color:#00C8F0; border: 0.5px solid rgba(0,200,240,0.45);">
+      <div class="swatch-name">Holo Tint</div>
+      <div class="swatch-hex">rgba(0,200,240, <strong>0.12</strong>)</div>
+      <div class="swatch-use">hover state, row highlight</div>
+    </div>
+    <div class="swatch" style="background:rgba(255,76,106,0.18); color:#FF4C6A; border: 0.5px solid rgba(255,76,106,0.5);">
+      <div class="swatch-name">Alert Tint</div>
+      <div class="swatch-hex">rgba(255,76,106, <strong>0.18</strong>)</div>
+      <div class="swatch-use">area patologica evidenziata</div>
+    </div>
+  </div>
+</div>
+
+<div class="pal-section">
+  <div class="pal-label">Border / outline raccomandati</div>
+  <div class="pal-row">
+    <div class="swatch" style="background:rgba(91,184,232,0.0); color:#5BB8E8; border: 1.5px solid rgba(91,184,232,0.55); border-radius:10px;">
+      <div class="swatch-name">Border default</div>
+      <div class="swatch-hex">rgba(91,184,232, <strong>0.55</strong>)</div>
+      <div class="swatch-use">tutti i panel, 1px</div>
+    </div>
+    <div class="swatch" style="background:rgba(0,200,240,0.0); color:#00C8F0; border: 1.5px solid rgba(0,200,240,0.9); border-radius:10px;">
+      <div class="swatch-name">Border focus</div>
+      <div class="swatch-hex">rgba(0,200,240, <strong>0.90</strong>)</div>
+      <div class="swatch-use">elemento selezionato attivo</div>
+    </div>
+    <div class="swatch" style="background:rgba(255,76,106,0.0); color:#FF4C6A; border: 1.5px solid rgba(255,76,106,0.8); border-radius:10px;">
+      <div class="swatch-name">Border alert</div>
+      <div class="swatch-hex">rgba(255,76,106, <strong>0.80</strong>)</div>
+      <div class="swatch-use">zona patologica, warning</div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<div class="pal-section">
+  <div class="pal-label">Preview — come appare su sfondo AR reale</div>
+  <div style="background: linear-gradient(135deg, #1a3a2a 0%, #2a3050 50%, #1a2a4a 100%); border-radius: 12px; padding: 20px; position: relative;">
+    <div style="background:rgba(10,15,30,0.82); border: 1px solid rgba(91,184,232,0.55); border-radius: 10px; padding: 14px 16px; margin-bottom: 10px;">
+      <div style="font-size:11px; color:#00C8F0; letter-spacing:1px; margin-bottom:6px;">PAZIENTE — Mario Rossi</div>
+      <div style="font-size:13px; color:#FFFFFF;">Sospetta lesione legamento crociato anteriore</div>
+      <div style="font-size:11px; color:#5BB8E8; margin-top:4px;">Ginocchio destro · Ortopedia</div>
+    </div>
+    <div style="background:rgba(255,76,106,0.18); border: 1px solid rgba(255,76,106,0.8); border-radius: 10px; padding: 10px 16px;">
+      <div style="font-size:11px; color:#FF4C6A; letter-spacing:1px;">AREA EVIDENZIATA</div>
+      <div style="font-size:12px; color:#FFFFFF; margin-top:2px;">Ginocchio dx — crociato anteriore</div>
+    </div>
+  </div>
+</div>

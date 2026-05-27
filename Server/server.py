@@ -6,7 +6,7 @@ Requires: ollama pull qwen2.5:1.5b  (or edit config.py for a different model)
 """
 
 from fastapi import FastAPI
-from routers import face, patients, ai, checklist
+from routers import face, patients, ai, checklist, admin
 
 app = FastAPI(
     title="AR HealthCare Companion",
@@ -18,6 +18,7 @@ app.include_router(face.router)
 app.include_router(patients.router)
 app.include_router(ai.router)
 app.include_router(checklist.router)
+app.include_router(admin.router)
 
 
 @app.get("/health")

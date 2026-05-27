@@ -7,7 +7,7 @@ namespace ARHealthCare.Network
     {
         [Header("Connection")]
         [Tooltip("IP address of the companion laptop running the FastAPI server")]
-        public string serverHost = "192.168.1.100"; /*TO BE CONFIGURED*/
+        public string serverHost = "192.168.4.86"; // MacBook M3 WiFi IP — update if network changes
         public int serverPort = 8000;
         [Tooltip("Request timeout in seconds")]
         public float timeoutSeconds = 15f;

@@ -10,5 +10,31 @@
     "current_treatment": "Fisioterapia pre-operatoria, antidolorifici NSAIDs al bisogno",
     "history": [],
     "notes": "Paziente sportivo, pratica calcio a livello amatoriale. Riabilitazione post-operatoria di almeno 6 mesi."
+  },
+  "mario_rossi": {
+    "id": "mario_rossi",
+    "display_name": "Mario Rossi",
+    "age": 45,
+    "diagnosis": "Ernia del disco L4-L5",
+    "specialty": "neurology",
+    "planned_procedure": "Microdiscectomia",
+    "procedure_date": "10 Giugno 2026",
+    "current_treatment": "FANS, fisioterapia",
+    "history": [
+      "Ipertensione lieve"
+    ],
+    "notes": "Paziente sedentario, lavoro d'ufficio."
+  },
+  "aura": {
+    "display_name": "Daniel Compleanno",
+    "age": 12,
+    "diagnosis": "Scale",
+    "specialty": "orthopedics",
+    "planned_procedure": "StairMaster",
+    "procedure_date": "27 Maggio 2026",
+    "current_treatment": "Reels",
+    "history": [],
+    "notes": "",
+    "id": "aura"
   }
 }

@@ -5,3 +5,4 @@ requests>=2.31.0
 Pillow>=10.0.0
 python-multipart>=0.0.9
 tf-keras>=2.16.0
+qrcode[pil]>=7.4.2
