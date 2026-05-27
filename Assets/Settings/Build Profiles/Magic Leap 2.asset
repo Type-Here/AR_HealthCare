@@ -866,7 +866,7 @@ MonoBehaviour:
     - line: '|   webWasm2023: 0'
     - line: '|   webEnableSubmoduleStrippingCompatibility: 0'
     - line: '|   scriptingDefineSymbols:'
-    - line: '|     Android: USE_STICK_CONTROL_THUMBSTICKS;USE_INPUT_SYSTEM_POSE_CONTROL;MAGICLEAP;USE_ML_OPENXR;APP_UI_EDITOR_ONLY'
+    - line: '|     Android: USE_STICK_CONTROL_THUMBSTICKS;USE_INPUT_SYSTEM_POSE_CONTROL;MAGICLEAP;USE_ML_OPENXR;APP_UI_EDITOR_ONLY;SENTIS_ANALYTICS_ENABLED'
     - line: '|     EmbeddedLinux: MAGICLEAP;USE_ML_OPENXR'
     - line: '|     GameCoreScarlett: MAGICLEAP;USE_ML_OPENXR'
     - line: '|     GameCoreXboxOne: MAGICLEAP;USE_ML_OPENXR'
