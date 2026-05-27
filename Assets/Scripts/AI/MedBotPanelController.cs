@@ -45,13 +45,21 @@ namespace ARHealthCare.AI
         [Header("Status")]
         [SerializeField] private TextMeshProUGUI _statusLabel;
 
+        [Header("Notification Badge")]
+        [Tooltip("Badge GameObject on the Holo toggle button in UIButtonsCanvas - shown when new content arrives while panel is closed")]
+        [SerializeField] private GameObject _notificationBadge;
+        [SerializeField] private TextMeshProUGUI _notificationCount;
+
         private PatientRecord _currentPatient;
         private string _currentMode = "student";
+        private bool _panelOpen;
+        private int _pendingCount;
 
         private void Start()
         {
-            OnTabClicked(0); // default to Suggestions tab
+            OnTabClicked(0);
             UpdateModeLabel();
+            ClearNotifications();
         }
 
 
@@ -81,6 +89,8 @@ namespace ARHealthCare.AI
                 if (toggle != null) toggle.isOn = false;
                 if (label  != null) label.text  = item;
             }
+
+            AddNotification();
         }
 
 
@@ -96,11 +106,24 @@ namespace ARHealthCare.AI
             StartCoroutine(FetchSuggestion());
         }
 
+        // Called by UIManager when the Holo canvas is shown
+        public void OnPanelOpened()
+        {
+            _panelOpen = true;
+            ClearNotifications();
+        }
+
+        // Called by UIManager when the Holo canvas is hidden
+        public void OnPanelClosed()
+        {
+            _panelOpen = false;
+        }
+
         public void OnModeClicked()
         {
             _currentMode = _currentMode == "student" ? "physician" : "student";
             UpdateModeLabel();
-            _medBotController?.SetMode(_currentMode == "student");
+            if (_medBotController != null) _medBotController.SetMode(_currentMode == "student");
         }
 
         public void OnTabClicked(int tabIndex)
@@ -128,12 +151,27 @@ namespace ARHealthCare.AI
                     if (_outputText != null) _outputText.text = text;
                     ScrollToBottom();
                     ShowStatus("Ready");
+                    AddNotification();
                 },
                 onFailure: err =>
                 {
                     if (_outputText != null) _outputText.text = $"[Error: {err}]";
                     ShowStatus("Server error");
                 });
+        }
+
+        private void AddNotification()
+        {
+            if (_panelOpen) return;
+            _pendingCount++;
+            if (_notificationBadge != null) _notificationBadge.SetActive(true);
+            if (_notificationCount != null) _notificationCount.text = _pendingCount.ToString();
+        }
+
+        private void ClearNotifications()
+        {
+            _pendingCount = 0;
+            if (_notificationBadge != null) _notificationBadge.SetActive(false);
         }
 
         private void PopulateRecords()

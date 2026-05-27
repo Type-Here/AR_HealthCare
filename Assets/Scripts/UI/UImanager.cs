@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using ARHealthCare.Core;
+using ARHealthCare.AI;
 
 
 namespace ARHealthCare.UI
@@ -16,15 +17,22 @@ namespace ARHealthCare.UI
         [Tooltip("Canvas containing the back and patient info button")]
         public GameObject UIButtonsCanvas;
 
+        [Header("Holo Panel")]
+        [Tooltip("Root GameObject of the Holo world-space canvas")]
+        [SerializeField] private GameObject _holoCanvas;
+        [Tooltip("MedBotPanelController on the Holo canvas - notified when panel opens/closes")]
+        [SerializeField] private MedBotPanelController _holoPanelController;
+
         [Header("Core Components")]
         [Tooltip("Reference to the UITracking component")]
         public UITracking uiTracking;
 
         [Header("Avatar Toggle")]
-        [Tooltip("Optional label on the Toggle Avatar button — text is updated when toggled")]
+        [Tooltip("Optional label on the Toggle Avatar button - text is updated when toggled")]
         [SerializeField] private TextMeshProUGUI _toggleAvatarButtonLabel;
 
         private bool _avatarHidden;
+        private bool _holoOpen;
 
         void Start()
         {
@@ -42,6 +50,7 @@ namespace ARHealthCare.UI
             mainMenuFade.gameObject.SetActive(false);
             UIButtonsCanvas.SetActive(true);
             patientInfoFade.gameObject.SetActive(false); // Ensure patient info is hidden when starting AR
+            CloseHoloPanel();
         }
 
         // =========================
@@ -49,6 +58,7 @@ namespace ARHealthCare.UI
         // =========================
         public void StartPatientInfo()
         {
+            CloseHoloPanel(); // Holo and PatientInfo are mutually exclusive (FOV constraint)
             mainMenuFade.FadeOut();
             mainMenuFade.gameObject.SetActive(false);
             patientInfoFade.gameObject.SetActive(true);
@@ -57,11 +67,44 @@ namespace ARHealthCare.UI
         }
 
         // =========================
+        // TOGGLE HOLO PANEL
+        // =========================
+        public void ToggleHoloPanel()
+        {
+            if (_holoOpen) CloseHoloPanel();
+            else OpenHoloPanel();
+        }
+
+        private void OpenHoloPanel()
+        {
+            // Hide patient info to reduce FOV clutter - only one content panel at a time
+            if (patientInfoFade != null && patientInfoFade.isActiveAndEnabled)
+                patientInfoFade.FadeOut();
+
+            if (_holoCanvas != null) _holoCanvas.SetActive(true);
+            if (_holoPanelController != null) _holoPanelController.OnPanelOpened();
+            _holoOpen = true;
+        }
+
+        private void CloseHoloPanel()
+        {
+            if (_holoCanvas != null) _holoCanvas.SetActive(false);
+            if (_holoPanelController != null) _holoPanelController.OnPanelClosed();
+            _holoOpen = false;
+        }
+
+        // =========================
         // RETURN TO MENU
         // =========================
         public void ReturnToMenu()
         {
-            patientInfoFade.FadeOut();
+            // Close Holo first if open - back steps through panels one at a time
+            if (_holoOpen)
+            {
+                CloseHoloPanel();
+                return;
+            }
+
             // If the patient info canvas is active, use the back button to hide it
             if (patientInfoFade.isActiveAndEnabled)
             {
@@ -71,7 +114,7 @@ namespace ARHealthCare.UI
             } else if (mainMenuFade.isActiveAndEnabled) {
                 mainMenuFade.FadeOut();
                 mainMenuFade.gameObject.SetActive(false);
-                
+
             } else {
                 mainMenuFade.gameObject.SetActive(true);
                 mainMenuFade.canvasGroup.alpha = 1f;
@@ -111,6 +154,7 @@ namespace ARHealthCare.UI
         {
             patientInfoFade.gameObject.SetActive(false);
             UIButtonsCanvas.SetActive(false);
+            CloseHoloPanel();
 
             mainMenuFade.gameObject.SetActive(true);
             mainMenuFade.canvasGroup.alpha = 1f;
