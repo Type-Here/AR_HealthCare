@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -6,17 +7,6 @@ using ARHealthCare.Network;
 
 namespace ARHealthCare.AI
 {
-    /// <summary>
-    /// Controls the MedBot suggestion panel:
-    ///   - Tab strip: Suggestions / Records / Checklist
-    ///   - Mode toggle: Student / Physician
-    ///   - Calls HealthCareApiClient for LLM suggestions
-    ///   - Populates checklist items from server
-    ///
-    /// Scene setup: attach to a World Space Canvas (380x280px, scale 0.001).
-    /// Assign all serialized references in Inspector.
-    /// Canvas must have TrackedDeviceGraphicRaycaster for Magic Leap 2 ray interaction.
-    /// </summary>
     public class MedBotPanelController : MonoBehaviour
     {
         [Header("Dependencies")]
@@ -26,21 +16,12 @@ namespace ARHealthCare.AI
         [Header("Mode")]
         [SerializeField] private TextMeshProUGUI _modeButtonLabel;
 
-        [Header("Tab Panels")]
-        [SerializeField] private GameObject _panelSuggestions;
-        [SerializeField] private GameObject _panelRecords;
-        [SerializeField] private GameObject _panelChecklist;
-
-        [Header("Suggestions Panel")]
-        [SerializeField] private TextMeshProUGUI _outputText;
-        [SerializeField] private ScrollRect _suggestionsScroll;
-
-        [Header("Records Panel")]
-        [SerializeField] private TextMeshProUGUI _recordText;
-
-        [Header("Checklist Panel")]
-        [SerializeField] private Transform _checklistContent;
+        [Header("Panel")]
+        [SerializeField] private ScrollRect _scroll;
+        [SerializeField] private TextMeshProUGUI _textDisplay;
+        [SerializeField] private Transform _checklistContainer;
         [SerializeField] private GameObject _checklistItemPrefab;
+        [SerializeField] private GameObject _askButton;
 
         [Header("Status")]
         [SerializeField] private TextMeshProUGUI _statusLabel;
@@ -50,10 +31,17 @@ namespace ARHealthCare.AI
         [SerializeField] private GameObject _notificationBadge;
         [SerializeField] private TextMeshProUGUI _notificationCount;
 
+        private readonly Dictionary<int, string> _tabContent = new()
+        {
+            { 0, "" },
+            { 1, "" }
+        };
+
         private PatientRecord _currentPatient;
         private string _currentMode = "student";
         private bool _panelOpen;
         private int _pendingCount;
+        private int _activeTab;
 
         private void Start()
         {
@@ -63,7 +51,7 @@ namespace ARHealthCare.AI
         }
 
 
-        //  Public API 
+        // Public API
 
         public void SetPatient(PatientRecord record)
         {
@@ -74,16 +62,16 @@ namespace ARHealthCare.AI
 
         public void PopulateChecklist(ChecklistResponse response)
         {
-            if (_checklistContent == null || _checklistItemPrefab == null) return;
+            if (_checklistContainer == null || _checklistItemPrefab == null) return;
 
-            foreach (Transform child in _checklistContent)
+            foreach (Transform child in _checklistContainer)
                 Destroy(child.gameObject);
 
             if (response?.items == null) return;
 
             foreach (string item in response.items)
             {
-                var go = Instantiate(_checklistItemPrefab, _checklistContent);
+                var go = Instantiate(_checklistItemPrefab, _checklistContainer);
                 var toggle = go.GetComponentInChildren<Toggle>();
                 var label  = go.GetComponentInChildren<TextMeshProUGUI>();
                 if (toggle != null) toggle.isOn = false;
@@ -94,7 +82,7 @@ namespace ARHealthCare.AI
         }
 
 
-        //  Button callbacks (wire in Inspector) 
+        // Button callbacks (wire in Inspector)
 
         public void OnAskClicked()
         {
@@ -128,9 +116,21 @@ namespace ARHealthCare.AI
 
         public void OnTabClicked(int tabIndex)
         {
-            if (_panelSuggestions != null) _panelSuggestions.SetActive(tabIndex == 0);
-            if (_panelRecords     != null) _panelRecords.SetActive(tabIndex == 1);
-            if (_panelChecklist   != null) _panelChecklist.SetActive(tabIndex == 2);
+            _activeTab = tabIndex;
+            bool isChecklist = tabIndex == 2;
+
+            if (_textDisplay != null)
+            {
+                _textDisplay.gameObject.SetActive(!isChecklist);
+                if (!isChecklist)
+                    _textDisplay.text = _tabContent.TryGetValue(tabIndex, out var text) ? text : "";
+            }
+
+            if (_checklistContainer != null)
+                _checklistContainer.gameObject.SetActive(isChecklist);
+
+            if (_askButton != null)
+                _askButton.SetActive(tabIndex == 0);
         }
 
 
@@ -139,7 +139,8 @@ namespace ARHealthCare.AI
         private IEnumerator FetchSuggestion()
         {
             ShowStatus("Thinking…");
-            if (_outputText != null) _outputText.text = "";
+            _tabContent[0] = "";
+            if (_activeTab == 0 && _textDisplay != null) _textDisplay.text = "";
 
             yield return _apiClient.GetSuggestion(
                 _currentPatient,
@@ -148,14 +149,20 @@ namespace ARHealthCare.AI
                 "",
                 onSuccess: text =>
                 {
-                    if (_outputText != null) _outputText.text = text;
-                    ScrollToBottom();
+                    _tabContent[0] = text;
+                    if (_activeTab == 0 && _textDisplay != null)
+                    {
+                        _textDisplay.text = text;
+                        ScrollToBottom();
+                    }
                     ShowStatus("Ready");
                     AddNotification();
                 },
                 onFailure: err =>
                 {
-                    if (_outputText != null) _outputText.text = $"[Error: {err}]";
+                    _tabContent[0] = $"[Error: {err}]";
+                    if (_activeTab == 0 && _textDisplay != null)
+                        _textDisplay.text = _tabContent[0];
                     ShowStatus("Server error");
                 });
         }
@@ -176,15 +183,18 @@ namespace ARHealthCare.AI
 
         private void PopulateRecords()
         {
-            if (_recordText == null || _currentPatient == null) return;
+            if (_currentPatient == null) return;
 
-            _recordText.text =
+            _tabContent[1] =
                 $"<b>{_currentPatient.display_name}</b>  |  {_currentPatient.age} anni\n\n"
                 + $"<b>Diagnosi:</b> {_currentPatient.diagnosis}\n\n"
                 + $"<b>Intervento:</b> {_currentPatient.planned_procedure}\n"
                 + $"<b>Data:</b> {_currentPatient.procedure_date}\n\n"
                 + $"<b>Trattamento:</b> {_currentPatient.current_treatment}\n\n"
                 + $"<b>Note:</b> {_currentPatient.notes}";
+
+            if (_activeTab == 1 && _textDisplay != null)
+                _textDisplay.text = _tabContent[1];
         }
 
         private void UpdateModeLabel()
@@ -200,14 +210,14 @@ namespace ARHealthCare.AI
 
         private void ScrollToBottom()
         {
-            if (_suggestionsScroll != null)
+            if (_scroll != null)
                 StartCoroutine(ForceScrollToBottom());
         }
 
         private IEnumerator ForceScrollToBottom()
         {
             yield return new WaitForEndOfFrame();
-            _suggestionsScroll.verticalNormalizedPosition = 0f;
+            _scroll.verticalNormalizedPosition = 0f;
         }
     }
 }
