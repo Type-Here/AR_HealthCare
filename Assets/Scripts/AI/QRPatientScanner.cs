@@ -24,59 +24,97 @@ namespace ARHealthCare.AI
         [Header("UI")]
         [SerializeField] private TextMeshProUGUI _statusLabel;
 
+        [Header("Scan Settings")]
+        [SerializeField] private float _scanTimeoutSeconds = 10f;
+        [SerializeField] private float _scanIntervalSeconds = 0.4f;
+
         private MultiFormatReader _qrReader;
+        private Coroutine _scanCoroutine;
 
         private void Awake()
         {
             _qrReader = new MultiFormatReader();
         }
 
-        /// <summary>Call from the "Scan QR" button onClick event.</summary>
+        /// <summary>Call from the "Scan QR" button onClick event. Starts/stops the scan loop.</summary>
         public void ScanForPatient()
         {
+            if (_scanCoroutine != null)
+            {
+                StopCoroutine(_scanCoroutine);
+                _scanCoroutine = null;
+                ShowStatus("Scan cancelled");
+                return;
+            }
+
             if (_mlCamera == null || !_mlCamera.IsReady)
             {
                 ShowStatus("Camera not ready");
                 return;
             }
 
-            Texture2D frame = _mlCamera.CaptureCurrentFrameAsTexture2D();
-            if (frame == null)
+            _scanCoroutine = StartCoroutine(ScanLoop());
+        }
+
+        private IEnumerator ScanLoop()
+        {
+            float elapsed = 0f;
+            int remaining = Mathf.CeilToInt(_scanTimeoutSeconds);
+            ShowStatus($"Scanning… {remaining}s");
+
+            while (elapsed < _scanTimeoutSeconds)
             {
-                ShowStatus("No camera frame available");
-                return;
+                string patientId = TryScanFrame();
+                if (patientId != null)
+                {
+                    _scanCoroutine = null;
+                    ShowStatus($"QR detected: {patientId}");
+                    StartCoroutine(LoadPatient(patientId));
+                    yield break;
+                }
+
+                yield return new WaitForSeconds(_scanIntervalSeconds);
+                elapsed += _scanIntervalSeconds;
+                remaining = Mathf.Max(0, Mathf.CeilToInt(_scanTimeoutSeconds - elapsed));
+                ShowStatus($"Scanning… {remaining}s");
             }
+
+            _scanCoroutine = null;
+            ShowStatus("No QR found — press button to try again");
+        }
+
+        // Returns the decoded string, or null if nothing was found this frame.
+        private string TryScanFrame()
+        {
+            if (_mlCamera == null || !_mlCamera.IsReady) return null;
+
+            Texture2D frame = _mlCamera.CaptureCurrentFrameAsTexture2D();
+            if (frame == null) return null;
 
             var pixels = frame.GetPixels32();
             int w = frame.width, h = frame.height;
             Destroy(frame);
 
-            byte[] rgb = new byte[pixels.Length * 3];
+            // Convert RGBA → grayscale luminance. Using BitmapFormat.Gray8 avoids
+            // the 3-arg constructor's BGR auto-detection that causes decode failures.
+            byte[] luminance = new byte[pixels.Length];
             for (int i = 0; i < pixels.Length; i++)
             {
-                rgb[i * 3]     = pixels[i].r;
-                rgb[i * 3 + 1] = pixels[i].g;
-                rgb[i * 3 + 2] = pixels[i].b;
+                var p = pixels[i];
+                luminance[i] = (byte)(p.r * 0.299f + p.g * 0.587f + p.b * 0.114f);
             }
 
-            Result qrResult = null;
             try
             {
-                var source = new RGBLuminanceSource(rgb, w, h);
+                var source = new RGBLuminanceSource(luminance, w, h, RGBLuminanceSource.BitmapFormat.Gray8);
                 var bitmap = new BinaryBitmap(new HybridBinarizer(source));
-                qrResult = _qrReader.decode(bitmap);
+                Result result = _qrReader.decode(bitmap);
+                return result?.Text?.Trim();
             }
-            catch { }
-
-            if (qrResult == null)
+            catch
             {
-                ShowStatus("No QR code found — hold steady");
-                return;
+                return null;
             }
-
-            string patientId = qrResult.Text.Trim();
-            ShowStatus($"QR detected: {patientId}");
-            StartCoroutine(LoadPatient(patientId));
         }
 
         private IEnumerator LoadPatient(string patientId)
@@ -86,11 +124,10 @@ namespace ARHealthCare.AI
                 patientId,
                 onSuccess: record =>
                 {
-                    _patientInfoUI?.PopulateFromRecord(record);
-                    _medBotPanel?.SetPatient(record);
+                    if (_patientInfoUI != null) _patientInfoUI.PopulateFromRecord(record);
+                    if (_medBotPanel != null) _medBotPanel.SetPatient(record);
                     ShowStatus($"Loaded: {record.display_name}");
 
-                    // Also prefetch checklist for this patient's specialty
                     if (!string.IsNullOrEmpty(record.specialty))
                         StartCoroutine(_apiClient.GetChecklist(
                             record.specialty,
