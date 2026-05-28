@@ -4707,7 +4707,7 @@ GameObject:
   - component: {fileID: 4665092399035814555}
   - component: {fileID: 3587696665454582323}
   m_Layer: 0
-  m_Name: MedBot_CanvasBasic
+  m_Name: Superseded_MedBot_CanvasBasic
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
