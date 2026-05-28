@@ -12,6 +12,8 @@ namespace ARHealthCare.AI
         [Header("Dependencies")]
         [SerializeField] private HealthCareApiClient _apiClient;
         [SerializeField] private MedBotController _medBotController;
+        [SerializeField] private PatientIssueMarker _issueMarker;
+        [SerializeField] private AndroidTTS _tts;
 
         [Header("Mode")]
         [SerializeField] private TextMeshProUGUI _modeButtonLabel;
@@ -22,6 +24,11 @@ namespace ARHealthCare.AI
         [SerializeField] private Transform _checklistContainer;
         [SerializeField] private GameObject _checklistItemPrefab;
         [SerializeField] private GameObject _askButton;
+
+        [Header("TTS Button")]
+        [SerializeField] private Image _ttsButtonIcon;
+        [SerializeField] private Sprite _stopSprite;
+        [SerializeField] private Sprite _replaySprite;
 
         [Header("Status")]
         [SerializeField] private TextMeshProUGUI _statusLabel;
@@ -42,12 +49,16 @@ namespace ARHealthCare.AI
         private bool _panelOpen;
         private int _pendingCount;
         private int _activeTab;
+        private bool _ttsSpeaking;
 
         private void Start()
         {
             OnTabClicked(0);
             UpdateModeLabel();
             ClearNotifications();
+
+            if (_tts != null)
+                _tts.OnSpeechDone += () => SetTtsIcon(false);
         }
 
 
@@ -57,6 +68,7 @@ namespace ARHealthCare.AI
         {
             _currentPatient = record;
             PopulateRecords();
+            _issueMarker?.SetPatient(record);
             ShowStatus($"Patient: {record.display_name}");
         }
 
@@ -114,6 +126,19 @@ namespace ARHealthCare.AI
             if (_medBotController != null) _medBotController.SetMode(_currentMode == "student");
         }
 
+        public void OnTtsButtonClicked()
+        {
+            if (_ttsSpeaking)
+            {
+                if (_tts != null) _tts.Stop();
+                SetTtsIcon(false);
+            }
+            else if (_tabContent.TryGetValue(0, out var text) && !string.IsNullOrEmpty(text))
+            {
+                TtsSpeak(text);
+            }
+        }
+
         public void OnTabClicked(int tabIndex)
         {
             _activeTab = tabIndex;
@@ -136,6 +161,19 @@ namespace ARHealthCare.AI
 
         // Private
 
+        private void TtsSpeak(string text)
+        {
+            if (_tts != null) _tts.Speak(text);
+            SetTtsIcon(true);
+        }
+
+        private void SetTtsIcon(bool speaking)
+        {
+            _ttsSpeaking = speaking;
+            if (_ttsButtonIcon != null)
+                _ttsButtonIcon.sprite = speaking ? _stopSprite : _replaySprite;
+        }
+
         private IEnumerator FetchSuggestion()
         {
             ShowStatus("Thinking…");
@@ -157,6 +195,7 @@ namespace ARHealthCare.AI
                     }
                     ShowStatus("Ready");
                     AddNotification();
+                    TtsSpeak(text);
                 },
                 onFailure: err =>
                 {
