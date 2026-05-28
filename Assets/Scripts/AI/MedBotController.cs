@@ -46,6 +46,7 @@ namespace ARHealthCare.AI
             StartCoroutine(FloatAnimation());
         }
 
+        /*
         private void LateUpdate()
         {
             if (_cam == null) { _cam = Camera.main; return; }
@@ -62,7 +63,7 @@ namespace ARHealthCare.AI
                 Quaternion lookRot = Quaternion.LookRotation(toCamera.normalized, Vector3.up);
                 transform.rotation = Quaternion.Slerp(transform.rotation, lookRot, Time.deltaTime * followSpeed);
             }
-        }
+        }*/
 
         private IEnumerator FloatAnimation()
         {
@@ -102,6 +103,12 @@ namespace ARHealthCare.AI
             }
         }
 
+        /// <summary>
+        /// Builds the geometric components for the MedBot. 
+        
+        /// A simple design: a glowing sphere body with a rotating ring accent. 
+        /// No external 3D models needed.
+        /// </summary>
         private void BuildGeometry()
         {
             // Sphere body 

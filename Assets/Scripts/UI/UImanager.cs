@@ -81,6 +81,8 @@ namespace ARHealthCare.UI
             if (patientInfoFade != null && patientInfoFade.isActiveAndEnabled)
                 patientInfoFade.FadeOut();
 
+            if (UIButtonsCanvas != null) UIButtonsCanvas.SetActive(false);
+
             if (_holoCanvas != null) _holoCanvas.SetActive(true);
             if (_holoPanelController != null) _holoPanelController.OnPanelOpened();
             _holoOpen = true;
@@ -91,6 +93,8 @@ namespace ARHealthCare.UI
             if (_holoCanvas != null) _holoCanvas.SetActive(false);
             if (_holoPanelController != null) _holoPanelController.OnPanelClosed();
             _holoOpen = false;
+            
+            if (UIButtonsCanvas != null && !mainMenuFade.isActiveAndEnabled) UIButtonsCanvas.SetActive(true);
         }
 
         // =========================
@@ -144,7 +148,7 @@ namespace ARHealthCare.UI
             }
 
             if (_toggleAvatarButtonLabel != null)
-                _toggleAvatarButtonLabel.text = _avatarHidden ? "Show Avatar" : "Hide Avatar";
+                _toggleAvatarButtonLabel.text = _avatarHidden ? "Avatar: Hidden" : "Avatar: Visible";
         }
 
         // =========================
@@ -162,7 +166,7 @@ namespace ARHealthCare.UI
 
             _avatarHidden = false;
             if (_toggleAvatarButtonLabel != null)
-                _toggleAvatarButtonLabel.text = "Hide Avatar";
+                _toggleAvatarButtonLabel.text = "Avatar: Visible";
         }
 
     }
