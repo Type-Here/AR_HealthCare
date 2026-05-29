@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -18,6 +19,9 @@ namespace ARHealthCare.AI
         [Header("Anchors")]
         [SerializeField] private Material _anchorMat;
         [SerializeField] [Range(0.02f, 0.15f)] private float _anchorScale = 0.05f;
+
+        [Header("Persistence")]
+        [SerializeField] private HealthCareApiClient _apiClient;
 
         // Keyword → bone mapping (Italian + English, right-side default)
         private static readonly (HumanBodyBones bone, string[] keywords)[] BoneKeywords =
@@ -51,6 +55,7 @@ namespace ARHealthCare.AI
         };
 
         private HumanBodyBones _currentBone = HumanBodyBones.RightLowerLeg;
+        private string _currentPatientId;
         private bool _moveMode;
         private readonly List<GameObject> _anchorGos = new();
 
@@ -74,8 +79,16 @@ namespace ARHealthCare.AI
 
         public void SetPatient(PatientRecord record)
         {
-            string text = $"{record.diagnosis} {record.planned_procedure} {record.notes}".ToLowerInvariant();
-            _currentBone = MatchBone(text);
+            _currentPatientId = record.id;
+
+            if (!string.IsNullOrEmpty(record.marker_bone) &&
+                Enum.TryParse(record.marker_bone, out HumanBodyBones saved))
+                _currentBone = saved;
+            else
+            {
+                string text = $"{record.diagnosis} {record.planned_procedure} {record.notes}".ToLowerInvariant();
+                _currentBone = MatchBone(text);
+            }
         }
 
         public void ToggleMoveMode() => SetMoveMode(!_moveMode);
@@ -93,6 +106,12 @@ namespace ARHealthCare.AI
         {
             _currentBone = bone;
             SetMoveMode(false);
+
+            if (_apiClient != null && !string.IsNullOrEmpty(_currentPatientId))
+                StartCoroutine(_apiClient.SaveMarkerBone(
+                    _currentPatientId, bone.ToString(),
+                    onSuccess: null,
+                    onFailure: err => Debug.LogWarning($"[PatientIssueMarker] SaveMarkerBone failed: {err}")));
         }
 
         private void BuildAnchors()

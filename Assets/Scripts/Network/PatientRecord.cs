@@ -15,6 +15,7 @@ namespace ARHealthCare.Network
         public string current_treatment;
         public string[] history;
         public string notes;
+        public string marker_bone;
     }
 
     [Serializable]

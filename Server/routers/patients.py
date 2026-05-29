@@ -44,6 +44,7 @@ class _PatientFields(BaseModel):
     current_treatment: str
     history: Optional[List[str]] = []
     notes: Optional[str] = ""
+    marker_bone: Optional[str] = None
 
     @field_validator("specialty")
     @classmethod
@@ -135,6 +136,24 @@ def update_patient(patient_id: str, req: UpdatePatientRequest):
     _patients[patient_id] = record
     _save()
     return record
+
+
+# ── PATCH marker bone ────────────────────────────────────────────────────
+
+class MarkerBoneRequest(BaseModel):
+    marker_bone: str
+
+
+@router.patch("/patient/{patient_id}/marker-bone")
+def patch_marker_bone(patient_id: str, req: MarkerBoneRequest):
+    if not _patients:
+        _load()
+    if patient_id not in _patients:
+        raise HTTPException(status_code=404, detail=f"Paziente '{patient_id}' non trovato")
+
+    _patients[patient_id]["marker_bone"] = req.marker_bone
+    _save()
+    return {"patient_id": patient_id, "marker_bone": req.marker_bone}
 
 
 # ── DELETE patient ───────────────────────────────────────────────────────────

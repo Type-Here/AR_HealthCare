@@ -92,7 +92,24 @@ namespace ARHealthCare.Network
         }
 
 
-        // HTTP helpers 
+        // Marker Bone
+
+        public IEnumerator SaveMarkerBone(
+            string patientId,
+            string boneName,
+            Action onSuccess,
+            Action<string> onFailure)
+        {
+            if (_config == null) { onFailure?.Invoke("ServerConfig missing"); yield break; }
+
+            string body = $"{{\"marker_bone\":\"{boneName}\"}}";
+            yield return PatchJson(_config.BaseUrl + "/patient/" + patientId + "/marker-bone", body,
+                _ => onSuccess?.Invoke(),
+                onFailure);
+        }
+
+
+        // HTTP helpers
 
         private IEnumerator GetJson(string url, Action<string> onSuccess, Action<string> onFailure)
         {
@@ -120,6 +137,22 @@ namespace ARHealthCare.Network
                 onSuccess?.Invoke(req.downloadHandler.text);
             else
                 onFailure?.Invoke($"POST {url} failed: {req.error}");
+        }
+
+        private IEnumerator PatchJson(string url, string jsonBody, Action<string> onSuccess, Action<string> onFailure)
+        {
+            using var req = new UnityWebRequest(url, "PATCH");
+            byte[] bodyBytes = System.Text.Encoding.UTF8.GetBytes(jsonBody);
+            req.uploadHandler   = new UploadHandlerRaw(bodyBytes);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+            req.timeout = Mathf.RoundToInt(_config.timeoutSeconds);
+            yield return req.SendWebRequest();
+
+            if (req.result == UnityWebRequest.Result.Success)
+                onSuccess?.Invoke(req.downloadHandler.text);
+            else
+                onFailure?.Invoke($"PATCH {url} failed: {req.error}");
         }
     }
 }
