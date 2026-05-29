@@ -119,7 +119,16 @@ namespace ARHealthCare.AI
 
         private IEnumerator LoadPatient(string patientId)
         {
-            ShowStatus("Loading patient record…");
+            if (_apiClient == null)
+            {
+                ShowStatus("Error: ApiClient not assigned");
+                Debug.LogError("QRPatientScanner: _apiClient is null — assign HealthCareApiClient in the Inspector.");
+                yield break;
+            }
+
+            ShowStatus($"Loading patient {patientId}…");
+            Debug.Log($"QRPatientScanner: requesting patient id={patientId}");
+
             yield return _apiClient.GetPatient(
                 patientId,
                 onSuccess: record =>
@@ -136,8 +145,8 @@ namespace ARHealthCare.AI
                 },
                 onFailure: err =>
                 {
-                    ShowStatus($"Patient not found: {patientId}");
-                    Debug.LogWarning($"QRPatientScanner: {err}");
+                    ShowStatus($"Network error: {err}");
+                    Debug.LogError($"QRPatientScanner: {err}");
                 });
         }
 
