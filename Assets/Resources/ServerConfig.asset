@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dc6832bd03c62e311bdd9f9b66098943, type: 3}
   m_Name: ServerConfig
   m_EditorClassIdentifier: Assembly-CSharp::ARHealthCare.Network.ServerConfig
-  serverHost: 192.168.1.100
+  serverHost: 192.168.4.86
   serverPort: 8000
-  timeoutSeconds: 15
+  timeoutSeconds: 10
