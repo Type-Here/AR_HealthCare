@@ -1,22 +1,32 @@
 using System;
 using System.Collections;
+using System.Net.Http;
+using System.Text;
+using System.Threading.Tasks;
 using UnityEngine;
-using UnityEngine.Networking;
 
 namespace ARHealthCare.Network
 {
     public class HealthCareApiClient : MonoBehaviour
     {
-        private ServerConfig _config;
+        [SerializeField] private ServerConfig _config;
+
+        // Single shared instance — HttpClient is thread-safe and meant to be reused.
+        private static readonly HttpClient _http = new HttpClient();
 
         private void Awake()
         {
-            _config = Resources.Load<ServerConfig>("ServerConfig");
             if (_config == null)
-                Debug.LogError("HealthCareApiClient: ServerConfig asset not found at Resources/ServerConfig. Create it via Assets > Create > ARHealthCare > Server Config.");
+                _config = Resources.Load<ServerConfig>("ServerConfig");
+            if (_config == null)
+            {
+                Debug.LogError("HealthCareApiClient: ServerConfig not assigned and not found at Resources/ServerConfig.");
+                return;
+            }
+            _http.Timeout = TimeSpan.FromSeconds(_config.timeoutSeconds);
         }
 
-        // Face Recognition 
+        // Face Recognition
 
         public IEnumerator RecognizeFace(
             Texture2D frame,
@@ -34,8 +44,7 @@ namespace ARHealthCare.Network
                 onFailure);
         }
 
-
-        // Patient Record 
+        // Patient Record
 
         public IEnumerator GetPatient(
             string patientId,
@@ -49,9 +58,7 @@ namespace ARHealthCare.Network
                 onFailure);
         }
 
-
-
-        // LLM Suggestion 
+        // LLM Suggestion
 
         public IEnumerator GetSuggestion(
             PatientRecord patient,
@@ -63,21 +70,21 @@ namespace ARHealthCare.Network
         {
             if (_config == null) { onFailure?.Invoke("ServerConfig missing"); yield break; }
 
-            var req = new SuggestRequest
+            var reqData = new SuggestRequest
             {
                 patient   = patient,
                 specialty = specialty,
                 mode      = mode,
                 context   = context
             };
-            string body = JsonUtility.ToJson(req);
+            string body = JsonUtility.ToJson(reqData);
 
             yield return PostJson(_config.BaseUrl + "/suggest", body,
                 text => onSuccess?.Invoke(JsonUtility.FromJson<SuggestResponse>(text).suggestion),
                 onFailure);
         }
 
-        // Checklist 
+        // Checklist
 
         public IEnumerator GetChecklist(
             string specialty,
@@ -90,7 +97,6 @@ namespace ARHealthCare.Network
                 text => onSuccess?.Invoke(JsonUtility.FromJson<ChecklistResponse>(text)),
                 onFailure);
         }
-
 
         // Marker Bone
 
@@ -108,51 +114,81 @@ namespace ARHealthCare.Network
                 onFailure);
         }
 
-
-        // HTTP helpers
+        // HTTP helpers — use System.Net.Http.HttpClient to avoid Unity 6's
+        // UnityWebRequest "Insecure connection not allowed" restriction on HTTP.
 
         private IEnumerator GetJson(string url, Action<string> onSuccess, Action<string> onFailure)
         {
-            using var req = UnityWebRequest.Get(url);
-            req.timeout = Mathf.RoundToInt(_config.timeoutSeconds);
-            yield return req.SendWebRequest();
+            var task = _http.GetAsync(url);
+            yield return new WaitUntil(() => task.IsCompleted);
 
-            if (req.result == UnityWebRequest.Result.Success)
-                onSuccess?.Invoke(req.downloadHandler.text);
-            else
-                onFailure?.Invoke($"GET {url} failed: {req.error}");
+            if (task.IsFaulted)
+            {
+                onFailure?.Invoke($"GET {url} failed: {task.Exception?.GetBaseException().Message}");
+                yield break;
+            }
+
+            var response = task.Result;
+            if (!response.IsSuccessStatusCode)
+            {
+                onFailure?.Invoke($"GET {url} failed: HTTP {(int)response.StatusCode}");
+                yield break;
+            }
+
+            var readTask = response.Content.ReadAsStringAsync();
+            yield return new WaitUntil(() => readTask.IsCompleted);
+            onSuccess?.Invoke(readTask.Result);
         }
 
         private IEnumerator PostJson(string url, string jsonBody, Action<string> onSuccess, Action<string> onFailure)
         {
-            using var req = new UnityWebRequest(url, "POST");
-            byte[] bodyBytes = System.Text.Encoding.UTF8.GetBytes(jsonBody);
-            req.uploadHandler   = new UploadHandlerRaw(bodyBytes);
-            req.downloadHandler = new DownloadHandlerBuffer();
-            req.SetRequestHeader("Content-Type", "application/json");
-            req.timeout = Mathf.RoundToInt(_config.timeoutSeconds);
-            yield return req.SendWebRequest();
+            var content = new StringContent(jsonBody, Encoding.UTF8, "application/json");
+            var task = _http.PostAsync(url, content);
+            yield return new WaitUntil(() => task.IsCompleted);
 
-            if (req.result == UnityWebRequest.Result.Success)
-                onSuccess?.Invoke(req.downloadHandler.text);
-            else
-                onFailure?.Invoke($"POST {url} failed: {req.error}");
+            if (task.IsFaulted)
+            {
+                onFailure?.Invoke($"POST {url} failed: {task.Exception?.GetBaseException().Message}");
+                yield break;
+            }
+
+            var response = task.Result;
+            if (!response.IsSuccessStatusCode)
+            {
+                onFailure?.Invoke($"POST {url} failed: HTTP {(int)response.StatusCode}");
+                yield break;
+            }
+
+            var readTask = response.Content.ReadAsStringAsync();
+            yield return new WaitUntil(() => readTask.IsCompleted);
+            onSuccess?.Invoke(readTask.Result);
         }
 
         private IEnumerator PatchJson(string url, string jsonBody, Action<string> onSuccess, Action<string> onFailure)
         {
-            using var req = new UnityWebRequest(url, "PATCH");
-            byte[] bodyBytes = System.Text.Encoding.UTF8.GetBytes(jsonBody);
-            req.uploadHandler   = new UploadHandlerRaw(bodyBytes);
-            req.downloadHandler = new DownloadHandlerBuffer();
-            req.SetRequestHeader("Content-Type", "application/json");
-            req.timeout = Mathf.RoundToInt(_config.timeoutSeconds);
-            yield return req.SendWebRequest();
+            var request = new HttpRequestMessage(new HttpMethod("PATCH"), url)
+            {
+                Content = new StringContent(jsonBody, Encoding.UTF8, "application/json")
+            };
+            var task = _http.SendAsync(request);
+            yield return new WaitUntil(() => task.IsCompleted);
 
-            if (req.result == UnityWebRequest.Result.Success)
-                onSuccess?.Invoke(req.downloadHandler.text);
-            else
-                onFailure?.Invoke($"PATCH {url} failed: {req.error}");
+            if (task.IsFaulted)
+            {
+                onFailure?.Invoke($"PATCH {url} failed: {task.Exception?.GetBaseException().Message}");
+                yield break;
+            }
+
+            var response = task.Result;
+            if (!response.IsSuccessStatusCode)
+            {
+                onFailure?.Invoke($"PATCH {url} failed: HTTP {(int)response.StatusCode}");
+                yield break;
+            }
+
+            var readTask = response.Content.ReadAsStringAsync();
+            yield return new WaitUntil(() => readTask.IsCompleted);
+            onSuccess?.Invoke(readTask.Result);
         }
     }
 }
