@@ -141,10 +141,19 @@ namespace ARHealthCare.AI
                 });
         }
 
+        private void ClearStatus()
+        {
+          if (_statusLabel != null) _statusLabel.text = "";
+        }
+
+
         private void ShowStatus(string msg)
         {
             if (_statusLabel != null) _statusLabel.text = msg;
             Debug.Log($"QRPatientScanner: {msg}");
+
+            CancelInvoke(nameof(ClearStatus));
+            Invoke(nameof(ClearStatus), 5f);
         }
     }
 }
