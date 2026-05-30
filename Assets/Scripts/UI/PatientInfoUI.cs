@@ -13,11 +13,21 @@ public class PatientProblemsUI : MonoBehaviour
     {
         GameObject item = Instantiate(problemItemPrefab, contentParent);
 
+        // Force item to stretch horizontally so TMP wraps correctly instead of overflowing.
+        if (item.TryGetComponent<RectTransform>(out var rt))
+        {
+            rt.anchorMin = new Vector2(0f, rt.anchorMin.y);
+            rt.anchorMax = new Vector2(1f, rt.anchorMax.y);
+            rt.offsetMin = new Vector2(0f, rt.offsetMin.y);
+            rt.offsetMax = new Vector2(0f, rt.offsetMax.y);
+        }
+
         TextMeshProUGUI tmp = item.GetComponentInChildren<TextMeshProUGUI>();
         if (tmp != null)
         {
-            tmp.fontSizeMax = 14;
-            tmp.fontSizeMin = 10;
+            tmp.textWrappingMode = TextWrappingModes.Normal;
+            tmp.fontSizeMax = 9;
+            tmp.fontSizeMin = 6;
             tmp.enableAutoSizing = true;
             tmp.text = text;
         }
