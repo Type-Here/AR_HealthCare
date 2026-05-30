@@ -1,0 +1,54 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: HoloMed_PanelBG_NoSPrite
+  m_Shader: {fileID: 4800000, guid: 8eb045913ca24ed48a027753a7388281, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BorderBright: 0.799
+    - _BorderWidthPx: 1.07
+    - _BracketSize: 18.9
+    - _BracketWidthPx: 1.27
+    - _CornerRadius: 0
+    - _GridWidth: 0.028
+    - _HeaderHeight: 0.122
+    - _Stencil: 0
+    - _VignetteRadius: 0.165
+    - _VignetteSmooth: 0.514
+    m_Colors:
+    - _BaseColor: {r: 0.039, g: 0.058999978, b: 0.11799998, a: 0.82}
+    - _BorderColor: {r: 0, g: 0.784, b: 0.941, a: 0.5}
+    - _BracketColor: {r: 0, g: 0.784, b: 0.941, a: 0.9}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _GridColor: {r: 0, g: 0.784, b: 0.941, a: 0.06}
+    - _GridTiling: {r: 20, g: 8, b: 0, a: 0}
+    - _HeaderColor: {r: 0.026, g: 0.081999965, b: 0.23499995, a: 0.92}
+    - _RectSize: {r: 400, g: 300, b: 0, a: 0}
+    - _TopColor: {r: 0.06699998, g: 0.10999996, b: 0.21999997, a: 0.78}
+    - _VignetteColor: {r: 0.01, g: 0.02, b: 0.054999977, a: 0.9}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1

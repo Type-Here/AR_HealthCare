@@ -1,0 +1,45 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: HoloMed_ButtonGray
+  m_Shader: {fileID: 4800000, guid: c5adb3981f95265419f416a317a4f1e5, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties: 
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs:
+    - _MainTex:
+        m_Texture: {fileID: 0}
+        m_Scale: {x: 1, y: 1}
+        m_Offset: {x: 0, y: 0}
+    m_Ints: []
+    m_Floats:
+    - _BevelBright: 0.499
+    - _BevelWidth: 0.05
+    - _CornerRadius: 4
+    - _PressDepth: 0
+    - _RimPower: 4
+    - _Stencil: 0
+    m_Colors:
+    - _BaseColor: {r: 0.16999996, g: 0.16999996, b: 0.16999996, a: 0.8}
+    - _Color: {r: 1, g: 1, b: 1, a: 1}
+    - _RectSize: {r: 200, g: 200, b: 0, a: 0}
+    - _RimColor: {r: 0.75, g: 0.75, b: 0.75, a: 0.35}
+    - _TopColor: {r: 0.37999994, g: 0.37999994, b: 0.37999994, a: 0.85}
+  m_BuildTextureStacks: []
+  m_AllowLocking: 1
