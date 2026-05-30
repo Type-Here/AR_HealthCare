@@ -26,6 +26,7 @@ namespace ARHealthCare.AI
         [SerializeField] private GameObject _askButton;
 
         [Header("TTS Button")]
+        [SerializeField] private GameObject _ttsButton;
         [SerializeField] private Image _ttsButtonIcon;
         [SerializeField] private Sprite _stopSprite;
         [SerializeField] private Sprite _replaySprite;
@@ -143,6 +144,14 @@ namespace ARHealthCare.AI
         {
             _activeTab = tabIndex;
             bool isChecklist = tabIndex == 2;
+            bool isSuggestion = tabIndex == 0;
+
+            // Stop TTS when leaving the suggestion tab
+            if (!isSuggestion && _ttsSpeaking)
+            {
+                if (_tts != null) _tts.Stop();
+                SetTtsIcon(false);
+            }
 
             if (_textDisplay != null)
             {
@@ -152,10 +161,20 @@ namespace ARHealthCare.AI
             }
 
             if (_checklistContainer != null)
+            {
                 _checklistContainer.gameObject.SetActive(isChecklist);
+                if (isChecklist)
+                    StartCoroutine(RebuildAndScrollTop(_checklistContainer as RectTransform));
+            }
 
             if (_askButton != null)
-                _askButton.SetActive(tabIndex == 0);
+                _askButton.SetActive(isSuggestion);
+
+            if (_ttsButton != null)
+                _ttsButton.SetActive(isSuggestion);
+
+            if (!isChecklist)
+                StartCoroutine(ScrollToTop());
         }
 
 
@@ -257,6 +276,20 @@ namespace ARHealthCare.AI
         {
             yield return new WaitForEndOfFrame();
             _scroll.verticalNormalizedPosition = 0f;
+        }
+
+        private IEnumerator ScrollToTop()
+        {
+            yield return new WaitForEndOfFrame();
+            if (_scroll != null) _scroll.verticalNormalizedPosition = 1f;
+        }
+
+        private IEnumerator RebuildAndScrollTop(RectTransform container)
+        {
+            yield return new WaitForEndOfFrame();
+            if (container != null)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(container);
+            if (_scroll != null) _scroll.verticalNormalizedPosition = 1f;
         }
     }
 }
