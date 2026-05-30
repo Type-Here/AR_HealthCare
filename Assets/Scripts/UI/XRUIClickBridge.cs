@@ -4,52 +4,57 @@ using UnityEngine.InputSystem;
 using UnityEngine.XR.Interaction.Toolkit.Interactors;
 
 /// <summary>
-/// Bypass del pipeline click interno di XRUIInputModule per Magic Leap 2 — OpenXR (XRI 3.3+).
-/// Usa XRRayInteractor.TryGetCurrentUIRaycastResult (stesso interactor che guida il line visualizer)
-/// e spara ExecuteEvents direttamente sul GameObject UI colpito, scavalcando il canale
-/// XRUIInputModule → UIPressInput che non propaga correttamente su ML2.
-///
-/// Pattern identico a ML2PointerRayColor (InteractableRayCast.cs) che funziona già per i 3D object.
-///
-/// Setup:
-///   1. Aggiungi questo script su qualunque GO in scena (es. EventSystem o XR Rig).
-///   2. Assegna il XRRayInteractor dall'inspector (oppure viene cercato automaticamente in Awake).
-///   3. Scegli il bottone (trigger / bumper) che deve fare click sull'UI.
+/// Bypass the click/drag pipeline of XRUIInputModule for Magic Leap 2 — OpenXR (XRI 3.3+).
+/// 
+/// Click: all events (PointerDown → PointerClick → PointerUp) are fired on the frame 
+///        where WasPressedThisFrame is true — identical to the original implementation, tested on ML2.
+/// 
+/// Drag: during the frame after the press, if the trigger remains pressed (IsPressed) 
+///       and the ray moves beyond dragThresholdPixels, BeginDrag/Drag/EndDrag are fired. 
+///       The drag does NOT cancel the already occurred click — ScrollRect does not implement 
+///       IPointerClickHandler so it is not disturbed, while child Buttons of the scroll receive 
+///       the click normally.
 /// </summary>
 public class XRUIClickBridge : MonoBehaviour
 {
     [Header("XRI Ray Interactor")]
-    [Tooltip("XRRayInteractor della scena. Trovato automaticamente in Awake se lasciato vuoto.")]
     [SerializeField] private XRRayInteractor rayInteractor;
 
-    [Header("Magic Leap 2 — Button Actions (OpenXR, nessun MLSDK)")]
-    // Stessa binding usata in ML2PointerRayColor — triggerPressed funziona già per il cubo 3D.
+    [Header("Magic Leap 2 — Button Actions (OpenXR)")]
     [SerializeField] private InputAction triggerPressed =
-        new InputAction(type: InputActionType.Button,
+        new(type: InputActionType.Button,
             binding: "<MagicLeapController>{RightHand}/triggerPressed",
             expectedControlType: "Button");
 
-    // Opzionale: bumper come alternativa al trigger.
     [SerializeField] private InputAction bumperPressed =
-        new InputAction(type: InputActionType.Button,
+        new(type: InputActionType.Button,
             binding: "<MagicLeapController>{RightHand}/gripPressed",
             expectedControlType: "Button");
 
-    [Header("Opzioni")]
-    [Tooltip("Se true, sia trigger che bumper fanno click sull'UI.")]
+    [Header("Options")]
     [SerializeField] private bool useBumperToo = false;
 
-    [Tooltip("Log di debug — disabilita in produzione.")]
+    [Tooltip("Distanza minima (pixel schermo) prima che un hold avvii il drag.")]
+    [SerializeField] private float dragThresholdPixels = 8f;
+
+    [Tooltip("Moltiplicatore sul delta per rendere lo scroll più sensibile.")]
+    [SerializeField] private float dragScale = 3f;
+
     [SerializeField] private bool verbose = true;
 
-    // PointerEventData riusabile: evita GC allocation ogni frame.
     private PointerEventData _pointerData;
+
+    // Drag state
+    private GameObject _dragTarget;
+    private Vector2 _dragOriginScreenPos;
+    private bool _dragStarted;
+    private bool _prevHeld;   // manual release detection — more reliable than WasReleasedThisFrame on ML2
 
     private void Awake()
     {
         if (rayInteractor == null)
         {
-            rayInteractor = Object.FindFirstObjectByType<XRRayInteractor>();
+            rayInteractor = FindFirstObjectByType<XRRayInteractor>();
             if (rayInteractor == null)
                 Debug.LogWarning("[XRUIClickBridge] Nessun XRRayInteractor trovato — assegnalo dall'Inspector.");
         }
@@ -73,38 +78,79 @@ public class XRUIClickBridge : MonoBehaviour
     {
         if (rayInteractor == null) return;
 
-        bool shouldClick = triggerPressed.WasPressedThisFrame()
-                        || (useBumperToo && bumperPressed.WasPressedThisFrame());
+        bool pressedThisFrame = triggerPressed.WasPressedThisFrame() || (useBumperToo && bumperPressed.WasPressedThisFrame());
+        bool heldNow          = triggerPressed.IsPressed()           || (useBumperToo && bumperPressed.IsPressed());
+        bool releasedThisFrame = _prevHeld && !heldNow;
+        _prevHeld = heldNow;
 
-        if (!shouldClick) return;
-
-        // Usa il risultato UI del XRRayInteractor — stesso hit che guida hover e line visualizer.
-        if (!rayInteractor.TryGetCurrentUIRaycastResult(out RaycastResult hit))
+        // ── Press: fire full click sequence (proven working on ML2) ──────────
+        if (pressedThisFrame)
         {
-            if (verbose) Debug.Log("[XRUIClickBridge] Bottone premuto ma nessun hit UI corrente.");
-            return;
+            if (!rayInteractor.TryGetCurrentUIRaycastResult(out RaycastResult hit))
+            {
+                if (verbose) Debug.Log("[XRUIClickBridge] Press: nessun hit UI.");
+                return;
+            }
+
+            GameObject target = hit.gameObject;
+            if (target == null) return;
+
+            if (verbose) Debug.Log($"[XRUIClickBridge] Click → '{target.name}'");
+
+            _pointerData.position              = hit.screenPosition;
+            _pointerData.pointerCurrentRaycast = hit;
+            _pointerData.pointerPressRaycast   = hit;
+
+            GameObject pressed = ExecuteEvents.ExecuteHierarchy(target, _pointerData, ExecuteEvents.pointerDownHandler);
+            _pointerData.pointerPress = pressed;
+            ExecuteEvents.ExecuteHierarchy(target, _pointerData, ExecuteEvents.pointerClickHandler);
+            ExecuteEvents.ExecuteHierarchy(target, _pointerData, ExecuteEvents.pointerUpHandler);
+            _pointerData.pointerPress = null;
+
+            // Arm drag tracking for subsequent held frames
+            _dragTarget         = target;
+            _dragOriginScreenPos = hit.screenPosition;
+            _dragStarted        = false;
         }
 
-        GameObject target = hit.gameObject;
-        if (target == null) return;
+        // ── Held (not the press frame): drag detection ────────────────────────
+        if (heldNow && !pressedThisFrame && _dragTarget != null)
+        {
+            if (rayInteractor.TryGetCurrentUIRaycastResult(out RaycastResult hit))
+            {
+                Vector2 rawDelta = hit.screenPosition - _dragOriginScreenPos;
 
-        if (verbose)
-            Debug.Log($"[XRUIClickBridge] Click UI → '{target.name}' (pos world: {hit.worldPosition})");
+                if (!_dragStarted && rawDelta.magnitude >= dragThresholdPixels)
+                {
+                    _pointerData.delta    = rawDelta * dragScale;
+                    _pointerData.position = hit.screenPosition;
+                    ExecuteEvents.ExecuteHierarchy(_dragTarget, _pointerData, ExecuteEvents.beginDragHandler);
+                    _dragStarted = true;
+                    if (verbose) Debug.Log($"[XRUIClickBridge] BeginDrag → '{_dragTarget.name}'");
+                }
 
-        // Aggiorna il PointerEventData con i dati dell'hit corrente.
-        _pointerData.position        = hit.screenPosition;
-        _pointerData.pointerCurrentRaycast = hit;
-        _pointerData.pointerPressRaycast   = hit;
+                if (_dragStarted)
+                {
+                    Vector2 frameDelta = (hit.screenPosition - _dragOriginScreenPos) * dragScale;
+                    _pointerData.delta    = frameDelta;
+                    _pointerData.position = hit.screenPosition;
+                    ExecuteEvents.ExecuteHierarchy(_dragTarget, _pointerData, ExecuteEvents.dragHandler);
+                    _dragOriginScreenPos = hit.screenPosition;
+                }
+            }
+        }
 
-        // Simula la sequenza completa PointerDown → PointerClick → PointerUp
-        // in modo che UnityEngine.UI.Button.onClick venga invocato correttamente.
-        GameObject pressed = ExecuteEvents.ExecuteHierarchy(target, _pointerData, ExecuteEvents.pointerDownHandler);
-        _pointerData.pointerPress = pressed;
-
-        ExecuteEvents.ExecuteHierarchy(target, _pointerData, ExecuteEvents.pointerClickHandler);
-        ExecuteEvents.ExecuteHierarchy(target, _pointerData, ExecuteEvents.pointerUpHandler);
-
-        // Pulizia per il frame successivo.
-        _pointerData.pointerPress = null;
+        // ── Release ───────────────────────────────────────────────────────────
+        if (releasedThisFrame && _dragTarget != null)
+        {
+            if (_dragStarted)
+            {
+                _pointerData.delta = Vector2.zero;
+                ExecuteEvents.ExecuteHierarchy(_dragTarget, _pointerData, ExecuteEvents.endDragHandler);
+                if (verbose) Debug.Log($"[XRUIClickBridge] EndDrag → '{_dragTarget.name}'");
+            }
+            _dragTarget  = null;
+            _dragStarted = false;
+        }
     }
 }
