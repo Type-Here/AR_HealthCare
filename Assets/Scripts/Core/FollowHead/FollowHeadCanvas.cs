@@ -1,38 +1,31 @@
-//Per rendere il movimento più fluido, si usa Lerp per interpolare posizione e rotazione, 
-//invece di spostarli bruscamente a ogni frame.
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 
 namespace ARHealthCare.Core.FollowHead
-{
-    /**
-        * FollowHeadCanvas
-        * Summary:
-        * Script per far seguire la UI alla testa del giocatore
-        * Description:
-        * Attacca questo script al canvas che contiene la UI che deve seguire la testa.
-        * 
-        * Il canvas seguirà la testa del giocatore mantenendo una distanza e altezza configurabile.
-        * La rotazione del canvas si adatterà per guardare sempre verso il giocatore.
-        * 
-        * Include due modalità:
-        * - Modalità Classica: segue anche su/giù con la testa (utile in AR)
-        * - Modalità Base Height: mantiene un'altezza costante dai piedi, non segue su/giù (più comoda in VR)
-        */
+{       /// <summary>
+        /// FollowHeadCanvas: A versatile script to make a UI canvas follow the player's head
+        /// in both AR and VR. 
+        /// 
+        /// It maintains a configurable distance and height, and smoothly rotates to face the player. 
+        /// 
+        /// Supports two modes: 
+        /// - "Classic" (follows head movement in all directions)
+        /// - "Base Height" (maintains constant height from the ground, ignoring vertical head movement).
+        ///</summary>
     public class UICanvasFollowHead : MonoBehaviour
     {
         [Header("Riferimenti")]
         public Transform playerHead;       // Camera XR
-        public Transform playerBase;       // Base del Character / piedi
+        public Transform playerBase;       // Character base / feet
 
         [Header("Distanza UI")]
         public float distance = 1.5f;
 
         [Header("Altezza UI")]
-        public float heightOffset = -0.2f;     // usato solo in modalità classica
-        public float heightFromBase = 1.4f;    // altezza costante dai piedi
+        public float heightOffset = -0.2f;     // only for Classic mode
+        public float heightFromBase = 1.4f;    // constant height from feet
 
         [Header("Smooth")]
         public float followSpeed = 1f;
@@ -40,42 +33,51 @@ namespace ARHealthCare.Core.FollowHead
         [Header("Flags")]
         public bool useBaseHeight = false;
 
+        private void OnEnable()
+        {
+            // Snap immediately so the panel appears at the correct position on first open,
+            // instead of lerping from whatever world position it had in the scene.
+            SnapToTarget();
+        }
+
         void LateUpdate()
         {
             if (!playerHead) return;
 
-            // -----------------------------------------------------
-            // BASE HEIGHT MODALITY (VR FRIENDLY)
-            // -----------------------------------------------------
-
-            // Orizzontal Forward (ignore head pitch)
             Vector3 flatForward = playerHead.forward;
             flatForward.y = 0f;
+            if (flatForward.sqrMagnitude < 0.001f) return;
             flatForward.Normalize();
 
-            // XZ follow head → follows physical movement
-            Vector3 targetPos =
-                playerHead.position +
-                flatForward * distance;
+            Vector3 targetPos = playerHead.position + flatForward * distance;
 
-            // Y Blocked on Base height → doesn't follow head up/down
-            //if (playerBase != null)
-            //    targetPos.y = playerBase.position.y + heightFromBase;
-
-            // Position Smooth
             transform.position = Vector3.Lerp(
                 transform.position,
                 targetPos,
                 Time.deltaTime * followSpeed
             );
 
-            // Only Orizzontal Rotation → UI always faces player but doesn't tilt with head
             Quaternion targetRot = Quaternion.LookRotation(flatForward);
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
                 targetRot,
                 Time.deltaTime * followSpeed
             );
+        }
+
+        private void SnapToTarget()
+        {
+            Transform head = playerHead;
+            if (head == null) head = Camera.main != null ? Camera.main.transform : null;
+            if (head == null) return;
+
+            Vector3 flatForward = head.forward;
+            flatForward.y = 0f;
+            if (flatForward.sqrMagnitude < 0.001f) return;
+            flatForward.Normalize();
+
+            transform.position = head.position + flatForward * distance;
+            transform.rotation = Quaternion.LookRotation(flatForward);
         }
     }
 
