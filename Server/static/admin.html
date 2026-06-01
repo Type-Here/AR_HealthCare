@@ -3,15 +3,13 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>AR HealthCare — Gestione Pazienti</title>
-<link rel="stylesheet" href="/admin.css" />
+<title>HoloMed — Pazienti</title>
+<link rel="stylesheet" href="/static/css/holomed.css" />
+<link rel="stylesheet" href="/static/css/admin.css" />
 </head>
 <body>
 
-<header>
-  <h1>🏥 AR HealthCare — Gestione Pazienti</h1>
-  <span id="server-status">Caricamento…</span>
-</header>
+<div id="nav-root"></div>
 
 <div class="layout">
 
@@ -131,6 +129,8 @@
 
 <div id="toast"></div>
 
-<script src="/admin.js"></script>
+<script src="/static/js/nav.js"></script>
+<script>Nav.render('admin')</script>
+<script src="/static/js/admin.js"></script>
 </body>
 </html>

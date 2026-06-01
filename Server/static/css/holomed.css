@@ -1,0 +1,167 @@
+/* HoloMed Design System — shared across all pages */
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+:root {
+  --bg:           #f4f6f8;
+  --card:         #ffffff;
+  --text:         #2c3e50;
+  --accent:       #2a7a7a;
+  --accent-h:     #1f5e5e;
+  --success:      #27ae60;
+  --deep-navy:    #0D1B3E;
+  --sky-blue:     #5BB8E8;
+  --holo-cyan:    #00C8F0;
+  --alert-red:    #FF4C6A;
+  --holo-tint:    rgba(0, 200, 240, 0.10);
+  --border:       rgba(91, 184, 232, 0.55);
+  --border-focus: rgba(0, 200, 240, 0.90);
+  --border-alert: rgba(255, 76, 106, 0.80);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+/* ── Navigation header ──────────────────────────────────────────────────────── */
+header {
+  background: var(--deep-navy);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .25);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.nav-brand {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+
+.nav-links {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.nav-link {
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--sky-blue);
+  text-decoration: none;
+  transition: background .15s, color .15s;
+  border: 1px solid transparent;
+}
+.nav-link:hover  { background: var(--holo-tint); color: var(--holo-cyan); }
+.nav-link.active { background: var(--holo-tint); color: var(--holo-cyan); border-color: rgba(0, 200, 240, .30); }
+
+.server-status { font-size: .78rem; white-space: nowrap; color: var(--sky-blue); }
+.server-status.online  { color: var(--holo-cyan); }
+.server-status.offline { color: var(--alert-red); }
+
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 6px;
+  font-size: .88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .15s, transform .1s;
+}
+.btn:active { transform: scale(.97); }
+
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: var(--accent-h); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-ghost:hover { background: var(--holo-tint); border-color: var(--holo-cyan); color: var(--holo-cyan); }
+
+.btn-danger { background: var(--alert-red); color: #fff; }
+.btn-danger:hover { background: #e0334f; }
+
+/* ── Status badge ───────────────────────────────────────────────────────────── */
+.status-badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.status-badge.online  { background: rgba(0,200,240,.12); color: var(--holo-cyan); border: 1px solid rgba(0,200,240,.4); }
+.status-badge.offline { background: rgba(255,76,106,.10); color: var(--alert-red); border: 1px solid rgba(255,76,106,.4); }
+
+/* ── Specialty badge ────────────────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: .73rem;
+  font-weight: 600;
+  background: #e8f4f4;
+  color: var(--accent);
+  border: 1px solid #b2d8d8;
+  margin-right: 6px;
+}
+
+/* ── Toast ──────────────────────────────────────────────────────────────────── */
+#toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  font-size: .9rem;
+  font-weight: 600;
+  color: #fff;
+  opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+  z-index: 1000;
+}
+#toast.show    { opacity: 1; }
+#toast.success { background: var(--success); }
+#toast.error   { background: var(--alert-red); }
+
+/* ── Empty state ────────────────────────────────────────────────────────────── */
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--sky-blue);
+  font-size: .9rem;
+}
+
+/* ── Spinner ────────────────────────────────────────────────────────────────── */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .6s linear infinite;
+  display: none;
+}
+.spinner.show { display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }

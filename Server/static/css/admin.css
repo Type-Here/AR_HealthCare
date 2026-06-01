@@ -1,0 +1,159 @@
+/* Admin page — patient management */
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 420px;
+  gap: 24px;
+  padding: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+@media (max-width: 750px) { .layout { grid-template-columns: 1fr; } }
+
+/* ── Section header ─────────────────────────────────────────────────────────── */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-header h2 {
+  font-size: .8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .8px;
+  color: var(--sky-blue);
+}
+
+/* ── Patient cards ──────────────────────────────────────────────────────────── */
+#patient-list { display: flex; flex-direction: column; gap: 10px; }
+
+.patient-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: background .2s, box-shadow .2s, border-color .2s;
+}
+.patient-card:hover {
+  background: var(--holo-tint);
+  border-color: var(--holo-cyan);
+  box-shadow: 0 0 12px rgba(0, 200, 240, 0.15);
+}
+.patient-card.active {
+  border-color: var(--holo-cyan);
+  box-shadow: 0 0 0 2px rgba(0, 200, 240, 0.25);
+}
+
+.card-row { display: flex; align-items: baseline; justify-content: space-between; }
+.card-name { font-size: 1rem; font-weight: 600; color: var(--text); }
+.card-id   { font-size: .78rem; color: var(--sky-blue); font-family: monospace; }
+.card-meta { margin-top: 4px; font-size: .82rem; color: var(--sky-blue); }
+
+/* ── Form panel ─────────────────────────────────────────────────────────────── */
+#form-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-top: 3px solid transparent;
+  border-radius: 10px;
+  padding: 20px;
+  align-self: start;
+  display: none;
+  transition: border-top-color .2s;
+}
+#form-panel.visible { display: block; }
+
+#form-panel[data-mode="add"]  { border-top-color: var(--accent); }
+#form-panel[data-mode="view"] { border-top-color: var(--sky-blue); }
+#form-panel[data-mode="edit"] { border-top-color: var(--holo-cyan); }
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+#panel-title { font-size: 1rem; font-weight: 700; color: var(--text); }
+
+.mode-badge {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+#form-panel[data-mode="add"]  .mode-badge { background: #e8f4f4; color: var(--accent); border: 1px solid #b2d8d8; }
+#form-panel[data-mode="view"] .mode-badge { background: rgba(91,184,232,.12); color: var(--sky-blue); border: 1px solid var(--border); }
+#form-panel[data-mode="edit"] .mode-badge { background: rgba(0,200,240,.10); color: var(--holo-cyan); border: 1px solid rgba(0,200,240,.4); }
+
+/* ── Form fields ────────────────────────────────────────────────────────────── */
+.field { margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-size: .8rem;
+  font-weight: 600;
+  margin-bottom: 5px;
+  color: var(--text);
+  transition: color .2s;
+}
+.field label .req { color: var(--alert-red); margin-left: 2px; }
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: .88rem;
+  font-family: inherit;
+  color: var(--text);
+  background: #fafbfc;
+  transition: border-color .15s, box-shadow .15s, background .15s;
+  outline: none;
+}
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(0, 200, 240, 0.12);
+  background: #fff;
+}
+.field input.err,
+.field select.err,
+.field textarea.err {
+  border-color: var(--border-alert);
+  box-shadow: 0 0 0 2px rgba(255, 76, 106, 0.10);
+}
+.field textarea { resize: vertical; min-height: 64px; }
+
+.field input:disabled,
+.field select:disabled,
+.field textarea:disabled {
+  background: var(--bg);
+  color: var(--text);
+  -webkit-text-fill-color: var(--text);
+  border-color: rgba(91, 184, 232, 0.20);
+  cursor: default;
+  opacity: 1;
+}
+
+#form-panel[data-mode="view"] .req        { display: none; }
+#form-panel[data-mode="view"] .field-hint { display: none; }
+#form-panel[data-mode="view"] .field label { color: var(--sky-blue); }
+
+.field-hint { font-size: .75rem; color: var(--sky-blue); margin-top: 3px; }
+.field-err  { font-size: .75rem; color: var(--alert-red); margin-top: 3px; display: none; }
+.field-err.show { display: block; }
+
+/* ── Form actions ───────────────────────────────────────────────────────────── */
+.form-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+  justify-content: center;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}

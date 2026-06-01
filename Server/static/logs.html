@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HoloMed — Log</title>
+<link rel="stylesheet" href="/static/css/holomed.css" />
+<link rel="stylesheet" href="/static/css/logs.css" />
+</head>
+<body>
+
+<div id="nav-root"></div>
+
+<main class="logs-layout">
+
+  <div class="logs-header-row">
+    <h2>Server Log</h2>
+    <span id="log-status" class="status-badge offline">Connessione…</span>
+    <button class="btn btn-ghost" id="btn-clear-logs">Pulisci</button>
+  </div>
+
+  <div id="log-entries" class="log-entries"></div>
+
+</main>
+
+<script src="/static/js/nav.js"></script>
+<script src="/static/js/logs.js"></script>
+</body>
+</html>

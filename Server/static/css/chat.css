@@ -1,0 +1,49 @@
+/* Chat page — AI chat only */
+
+.chat-layout {
+  padding: 24px;
+  max-width: 900px;
+  margin: 0 auto;
+  height: calc(100vh - 56px);
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.chat-header-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+.chat-header-row h2 {
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--sky-blue);
+}
+
+#chat-log {
+  flex: 1;
+  resize: none;
+  background: #060b15;
+  color: var(--holo-cyan);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: .85rem;
+  line-height: 1.7;
+  outline: none;
+  cursor: default;
+  min-height: 0;
+}
+
+.chat-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+  flex-shrink: 0;
+}

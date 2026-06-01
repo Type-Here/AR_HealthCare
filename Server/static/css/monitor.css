@@ -1,0 +1,97 @@
+/* Monitor page — video feed + AI chat */
+
+.monitor-layout {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 16px;
+  padding: 16px;
+  height: calc(100vh - 56px);
+  box-sizing: border-box;
+}
+@media (max-width: 900px) {
+  .monitor-layout { grid-template-columns: 1fr; height: auto; }
+}
+
+.video-panel,
+.chat-panel {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.panel-header-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+.panel-header-row h2 {
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--sky-blue);
+}
+
+/* ── Video ─────────────────────────────────────────────────────────────────── */
+.video-container {
+  flex: 1;
+  position: relative;
+  background: #060b15;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+#video-feed {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.no-signal-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.no-signal-overlay .icon { font-size: 2rem; opacity: .4; }
+.no-signal-overlay .label { font-size: .85rem; color: var(--sky-blue); opacity: .6; }
+
+/* ── Chat log ──────────────────────────────────────────────────────────────── */
+#chat-log {
+  flex: 1;
+  resize: none;
+  background: #060b15;
+  color: var(--holo-cyan);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  font-family: 'SF Mono', 'Menlo', 'Monaco', 'Consolas', monospace;
+  font-size: .78rem;
+  line-height: 1.65;
+  outline: none;
+  cursor: default;
+  min-height: 0;
+}
+
+.panel-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+  flex-shrink: 0;
+}

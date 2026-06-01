@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HoloMed — Monitor</title>
+<link rel="stylesheet" href="/static/css/holomed.css" />
+<link rel="stylesheet" href="/static/css/monitor.css" />
+</head>
+<body>
+
+<div id="nav-root"></div>
+
+<main class="monitor-layout">
+
+  <!-- ── Video feed ── -->
+  <section class="video-panel">
+    <div class="panel-header-row">
+      <h2>Live Feed</h2>
+      <span id="video-status" class="status-badge offline">No signal</span>
+    </div>
+    <div class="video-container">
+      <img id="video-feed" alt="ML2 Video Feed" />
+      <div id="no-signal-overlay" class="no-signal-overlay">
+        <span class="icon">📡</span>
+        <span class="label">No signal — OBS Virtual Camera attiva?</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── AI chat ── -->
+  <section class="chat-panel">
+    <div class="panel-header-row">
+      <h2>AI Chat</h2>
+      <span id="chat-status" class="status-badge offline">Connessione…</span>
+    </div>
+    <textarea id="chat-log" readonly placeholder="In attesa di conversazioni Ollama…"></textarea>
+    <div class="panel-footer">
+      <button class="btn btn-ghost" id="btn-clear">Pulisci</button>
+    </div>
+  </section>
+
+</main>
+
+<script src="/static/js/nav.js"></script>
+<script src="/static/js/monitor.js"></script>
+</body>
+</html>

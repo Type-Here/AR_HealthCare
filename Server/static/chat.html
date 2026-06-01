@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>HoloMed — Chat AI</title>
+<link rel="stylesheet" href="/static/css/holomed.css" />
+<link rel="stylesheet" href="/static/css/chat.css" />
+</head>
+<body>
+
+<div id="nav-root"></div>
+
+<main class="chat-layout">
+
+  <div class="chat-header-row">
+    <h2>Chat AI — Live</h2>
+    <span id="chat-status" class="status-badge offline">Connessione…</span>
+  </div>
+
+  <textarea id="chat-log" readonly placeholder="In attesa di conversazioni Ollama…"></textarea>
+
+  <div class="chat-footer">
+    <button class="btn btn-ghost" id="btn-clear">Pulisci</button>
+  </div>
+
+</main>
+
+<script src="/static/js/nav.js"></script>
+<script src="/static/js/chat.js"></script>
+</body>
+</html>
