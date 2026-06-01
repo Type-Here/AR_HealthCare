@@ -30,6 +30,8 @@ namespace ARHealthCare.AI
         [SerializeField] private Image _ttsButtonIcon;
         [SerializeField] private Sprite _stopSprite;
         [SerializeField] private Sprite _replaySprite;
+        [Header("TTS Debounce")]
+        [SerializeField] private float _ttsClickCooldown = 0.35f;
 
         [Header("Status")]
         [SerializeField] private TextMeshProUGUI _statusLabel;
@@ -51,6 +53,17 @@ namespace ARHealthCare.AI
         private int _pendingCount;
         private int _activeTab;
         private bool _ttsSpeaking;
+        private float _lastTtsClickTime;
+
+        private void Awake()
+        {
+            EnsureChecklistLayout();
+        }
+
+        private void OnEnable()
+        {
+            StartCoroutine(RebuildPanelOnEnable());
+        }
 
         private void Start()
         {
@@ -58,8 +71,23 @@ namespace ARHealthCare.AI
             UpdateModeLabel();
             ClearNotifications();
 
+                  if (_tts != null)
+                _tts.OnSpeechDone += HandleSpeechDone;
+        }
+
+        private void OnDisable()
+        {
             if (_tts != null)
-                _tts.OnSpeechDone += () => SetTtsIcon(false);
+                _tts.OnSpeechDone -= HandleSpeechDone;
+        }
+
+        private void Update()
+        {
+            if (_tts == null) return;
+
+            bool isSpeaking = _tts.IsSpeaking();
+            if (isSpeaking != _ttsSpeaking)
+                SetTtsIcon(isSpeaking);
         }
 
 
@@ -129,6 +157,10 @@ namespace ARHealthCare.AI
 
         public void OnTtsButtonClicked()
         {
+            if (Time.unscaledTime - _lastTtsClickTime < _ttsClickCooldown)
+                return;
+            _lastTtsClickTime = Time.unscaledTime;
+
             if (_ttsSpeaking)
             {
                 if (_tts != null) _tts.Stop();
@@ -180,6 +212,11 @@ namespace ARHealthCare.AI
 
         // Private
 
+        private void HandleSpeechDone()
+        {
+            SetTtsIcon(false);
+        }
+
         private void TtsSpeak(string text)
         {
             if (_tts != null) _tts.Speak(text);
@@ -210,7 +247,7 @@ namespace ARHealthCare.AI
                     if (_activeTab == 0 && _textDisplay != null)
                     {
                         _textDisplay.text = text;
-                        ScrollToBottom();
+                        StartCoroutine(ScrollToTop());
                     }
                     ShowStatus("Ready");
                     AddNotification();
@@ -266,18 +303,6 @@ namespace ARHealthCare.AI
             if (_statusLabel != null) _statusLabel.text = msg;
         }
 
-        private void ScrollToBottom()
-        {
-            if (_scroll != null)
-                StartCoroutine(ForceScrollToBottom());
-        }
-
-        private IEnumerator ForceScrollToBottom()
-        {
-            yield return new WaitForEndOfFrame();
-            _scroll.verticalNormalizedPosition = 0f;
-        }
-
         private IEnumerator ScrollToTop()
         {
             yield return new WaitForEndOfFrame();
@@ -290,6 +315,42 @@ namespace ARHealthCare.AI
             if (container != null)
                 LayoutRebuilder.ForceRebuildLayoutImmediate(container);
             if (_scroll != null) _scroll.verticalNormalizedPosition = 1f;
+        }
+
+        // Adds VerticalLayoutGroup + ContentSizeFitter to ChecklistContainer if missing in prefab
+        private void EnsureChecklistLayout()
+        {
+            if (_checklistContainer == null) return;
+
+            if (_checklistContainer.GetComponent<VerticalLayoutGroup>() == null)
+            {
+                var vlg = _checklistContainer.gameObject.AddComponent<VerticalLayoutGroup>();
+                vlg.spacing = 4f;
+                vlg.padding = new RectOffset(4, 4, 4, 4);
+                vlg.childControlWidth = true;
+                vlg.childControlHeight = false;
+                vlg.childForceExpandWidth = true;
+                vlg.childForceExpandHeight = false;
+            }
+
+            if (_checklistContainer.GetComponent<ContentSizeFitter>() == null)
+            {
+                var csf = _checklistContainer.gameObject.AddComponent<ContentSizeFitter>();
+                csf.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+            }
+        }
+
+        // Waits one frame after panel activation so all layout groups have a chance to initialise,
+        // then forces a full rebuild and resets scroll to top.
+        private IEnumerator RebuildPanelOnEnable()
+        {
+            yield return null;
+            yield return new WaitForEndOfFrame();
+            if (_scroll != null)
+            {
+                LayoutRebuilder.ForceRebuildLayoutImmediate(_scroll.content);
+                _scroll.verticalNormalizedPosition = 1f;
+            }
         }
     }
 }
