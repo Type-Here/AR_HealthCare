@@ -82,7 +82,7 @@ public class PatientProblemsUI : MonoBehaviour
 
     private void PopulateBuiltInFallback()
     {
-        AddProblem("Paziente: Luigi il Compagnone"
+        AddProblem("Paziente: Luigi Sica"
             + "\nEtà: 25 anni"
             + "\nDiagnosi: Rottura Crociato Anteriore (Dx)\n"
             + "\nIntervento (previsto): Artroscopia con ricostruzione del legamento"
