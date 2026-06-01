@@ -1,5 +1,7 @@
 """Ollama HTTP client for LLM suggestions."""
 
+import json
+
 import requests
 import config
 
@@ -65,3 +67,38 @@ def get_suggestion(patient: dict, specialty: str, mode: str, context: str) -> st
         return "Error: Ollama is not running. Start it with: ollama serve"
     except Exception as e:
         return f"Error: {e}"
+
+
+def get_suggestion_stream(patient: dict, specialty: str, mode: str, context: str):
+    """Yields response tokens one by one from Ollama streaming API."""
+    system_prompt, user_prompt = build_prompt(patient, specialty, mode, context)
+
+    payload = {
+        "model": config.OLLAMA_MODEL,
+        "prompt": f"[SYSTEM]\n{system_prompt}\n\n[USER]\n{user_prompt}",
+        "stream": True,
+        "options": {
+            "temperature": 0.4,
+            "num_predict": 256,
+        },
+    }
+
+    try:
+        with requests.post(
+            f"{config.OLLAMA_BASE_URL}/api/generate",
+            json=payload,
+            stream=True,
+            timeout=60,
+        ) as r:
+            r.raise_for_status()
+            for line in r.iter_lines():
+                if line:
+                    chunk = json.loads(line)
+                    if chunk.get("response"):
+                        yield chunk["response"]
+                    if chunk.get("done"):
+                        break
+    except requests.exceptions.ConnectionError:
+        yield "Error: Ollama is not running. Start it with: ollama serve"
+    except Exception as e:
+        yield f"Error: {e}"
