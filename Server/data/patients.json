@@ -1,7 +1,6 @@
 {
   "luigi_compagnone": {
-    "id": "luigi_compagnone",
-    "display_name": "Luigi il Compagnone",
+    "display_name": "Luigi Sica",
     "age": 25,
     "diagnosis": "Rottura Crociato Anteriore (Dx)",
     "specialty": "orthopedics",
@@ -9,7 +8,9 @@
     "procedure_date": "1 Aprile 2026",
     "current_treatment": "Fisioterapia pre-operatoria, antidolorifici NSAIDs al bisogno",
     "history": [],
-    "notes": "Paziente sportivo, pratica calcio a livello amatoriale. Riabilitazione post-operatoria di almeno 6 mesi."
+    "notes": "Paziente sportivo, pratica calcio a livello amatoriale. Riabilitazione post-operatoria di almeno 6 mesi.",
+    "marker_bone": null,
+    "id": "luigi_compagnone"
   },
   "mario_rossi": {
     "id": "mario_rossi",
@@ -24,17 +25,5 @@
       "Ipertensione lieve"
     ],
     "notes": "Paziente sedentario, lavoro d'ufficio."
-  },
-  "aura": {
-    "display_name": "Daniel Compleanno",
-    "age": 12,
-    "diagnosis": "Scale",
-    "specialty": "orthopedics",
-    "planned_procedure": "StairMaster",
-    "procedure_date": "27 Maggio 2026",
-    "current_treatment": "Reels",
-    "history": [],
-    "notes": "",
-    "id": "aura"
   }
 }
