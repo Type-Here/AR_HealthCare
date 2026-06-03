@@ -44,7 +44,6 @@ function renderPatients(patients) {
     <div class="patient-card${_currentId === p.id ? ' active' : ''}" data-id="${esc(p.id)}">
       <div class="card-row">
         <span class="card-name">${esc(p.display_name)}</span>
-        <span class="card-id">${esc(p.id)}</span>
       </div>
       <div class="card-meta">
         <span class="badge">${esc(p.specialty)}</span>
@@ -312,6 +311,31 @@ async function submitEdit() {
     spinner.classList.remove('show');
   }
 }
+
+// ── QR Code modal ─────────────────────────────────────────────────────────────
+
+function showQR() {
+  const modal = document.getElementById('qr-modal');
+  const img   = document.getElementById('qr-img');
+  const p     = _cache[_currentId];
+
+  document.getElementById('qr-patient-name').textContent = p?.display_name ?? _currentId;
+
+  img.src = `/patient/${_currentId}/qrcode`;
+  modal.hidden = false;
+  document.body.style.overflow = 'hidden';
+}
+
+function closeQR() {
+  const modal = document.getElementById('qr-modal');
+  modal.hidden = true;
+  document.getElementById('qr-img').src = '';
+  document.body.style.overflow = '';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeQR();
+});
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 

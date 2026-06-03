@@ -1,9 +1,12 @@
+import io
 import json
 import os
 import shutil
 from typing import List, Optional
 
+import qrcode
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 
 router = APIRouter()
@@ -154,6 +157,32 @@ def patch_marker_bone(patient_id: str, req: MarkerBoneRequest):
     _patients[patient_id]["marker_bone"] = req.marker_bone
     _save()
     return {"patient_id": patient_id, "marker_bone": req.marker_bone}
+
+
+# ── GET QR code ──────────────────────────────────────────────────────────────
+
+@router.get("/patient/{patient_id}/qrcode", response_class=StreamingResponse)
+def get_patient_qrcode(patient_id: str):
+    if not _patients:
+        _load()
+    if patient_id not in _patients:
+        raise HTTPException(status_code=404, detail=f"Paziente '{patient_id}' non trovato")
+
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(patient_id)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+
+    buf = io.BytesIO()
+    img.save(buf, format="PNG")
+    buf.seek(0)
+
+    return StreamingResponse(buf, media_type="image/png")
 
 
 # ── DELETE patient ───────────────────────────────────────────────────────────

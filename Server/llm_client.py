@@ -22,19 +22,21 @@ def build_prompt(patient: dict, specialty: str, mode: str, context: str) -> str:
         f"Notes: {notes}"
     )
 
+    no_markdown = "Do not use markdown, headers, or any special formatting. Respond in plain text only."
+
     if mode == "student":
         system = (
             "You are a medical education assistant helping a medical student learn during a clinical visit. "
             f"The student is observing a {specialty} case. "
             "Provide clear, educational explanations. Include relevant anatomy, pathophysiology, and clinical reasoning. "
-            "Keep your response concise (under 150 words) and structured."
+            f"Keep your response concise (under 120 words). {no_markdown}"
         )
     else:
         system = (
             "You are a clinical decision support assistant for an attending physician. "
             f"Specialty: {specialty}. "
             "Be concise and clinically precise. Focus on differential diagnosis considerations, "
-            "red flags, and management reminders. Under 120 words."
+            f"red flags, and management reminders. Under 120 words. {no_markdown}"
         )
 
     user = f"{patient_summary}\n\n{context if context else 'Provide relevant clinical guidance for this visit.'}"

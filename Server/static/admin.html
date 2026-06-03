@@ -111,6 +111,7 @@
     <div id="actions-view" class="form-actions" hidden>
       <button class="btn btn-danger" onclick="deletePatient()">🗑 Elimina</button>
       <button class="btn btn-ghost" onclick="closePanel()">Chiudi</button>
+      <button class="btn btn-qr" onclick="showQR()">QR Code</button>
       <button class="btn btn-primary" onclick="openEdit()">Modifica</button>
     </div>
 
@@ -125,6 +126,17 @@
 
   </aside>
 
+</div>
+
+<!-- QR fullscreen modal -->
+<div id="qr-modal" class="qr-overlay" hidden onclick="closeQR()">
+  <div class="qr-box" onclick="event.stopPropagation()">
+    <div class="qr-header">
+      <span id="qr-patient-name"></span>
+      <button class="qr-close" onclick="closeQR()">✕</button>
+    </div>
+    <img id="qr-img" src="" alt="QR Code paziente" />
+  </div>
 </div>
 
 <div id="toast"></div>
