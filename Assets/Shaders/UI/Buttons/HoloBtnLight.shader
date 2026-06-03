@@ -13,7 +13,7 @@ Shader "HoloMed/ButtonLight"
         _BevelBright    ("Bevel brightness",Range(0,2))  = 0.30
         _PressDepth     ("Press offset",    Range(0,1))  = 0.0
         _CornerRadius   ("Corner Radius px",Range(0,64)) = 12
-        _RectSize       ("Rect Size px",    Vector)      = (200, 60, 0, 0)
+        _RectSize       ("Rect Size px",    Vector)      = (200, 80, 0, 0)
         _Stencil        ("Stencil ID",      Float) = 0
     }
 
