@@ -35,8 +35,8 @@ MonoBehaviour:
     - line: '|   targetDevice: 2'
     - line: '|   useOnDemandResources: 0'
     - line: '|   accelerometerFrequency: 60'
-    - line: '|   companyName: DefaultCompany'
-    - line: '|   productName: healthcare-iv'
+    - line: '|   companyName: CGLab'
+    - line: '|   productName: HoloMed'
     - line: '|   defaultCursor: {instanceID: 0}'
     - line: '|   cursorHotspot: {x: 0, y: 0}'
     - line: '|   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b:
@@ -168,7 +168,7 @@ MonoBehaviour:
     - line: '|   loadStoreDebugModeEnabled: 0'
     - line: '|   visionOSBundleVersion: 1.0'
     - line: '|   tvOSBundleVersion: 1.0'
-    - line: '|   bundleVersion: 1.0.0'
+    - line: '|   bundleVersion: 0.8.1'
     - line: '|   preloadedAssets:'
     - line: '|   - {fileID: -944628639613478452, guid: bb4daeceea261404d9e9069323220d1b,
         type: 3}'
@@ -195,7 +195,7 @@ MonoBehaviour:
     - line: '|   androidMaxAspectRatio: 2.4'
     - line: '|   androidMinAspectRatio: 1'
     - line: '|   applicationIdentifier:'
-    - line: '|     Android: com.cglab.arhealthcare_dbg'
+    - line: '|     Android: com.cglab.holomed'
     - line: '|     Standalone: com.unity.template.ar-mobile'
     - line: '|     iPhone: com.unity.template.armobile'
     - line: '|   buildNumber:'
