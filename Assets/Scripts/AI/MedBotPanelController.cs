@@ -41,6 +41,10 @@ namespace ARHealthCare.AI
         [SerializeField] private GameObject _notificationBadge;
         [SerializeField] private TextMeshProUGUI _notificationCount;
 
+        [Header("TabStrip")]
+        [Tooltip("Buttons in the tab strip, wired in Inspector - order should match tab indices used in code")]
+        [SerializeField] private List<Button> _tabButtons;
+
         private readonly Dictionary<int, string> _tabContent = new()
         {
             { 0, "" },
@@ -177,6 +181,18 @@ namespace ARHealthCare.AI
             _activeTab = tabIndex;
             bool isChecklist = tabIndex == 2;
             bool isSuggestion = tabIndex == 0;
+            Color activeColor = new Color(0.78f, 0.78f, 0.78f); // Light gray
+            Color inactiveColor = new Color(1f, 1f, 1f);
+            
+            // Update tab button colors to indicate active tab
+            for (int i = 0; i < _tabButtons.Count; i++)
+            {
+                // Note: assume the use of Image component for button background color
+                if (_tabButtons[i] != null)
+                {
+                    _tabButtons[i].GetComponent<Image>().color = (i == tabIndex) ? activeColor : inactiveColor;
+                }
+            }
 
             // Stop TTS when leaving the suggestion tab
             if (!isSuggestion && _ttsSpeaking)
