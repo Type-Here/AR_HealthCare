@@ -29,11 +29,11 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _BevelBright: 0.215
-    - _BevelWidth: 0.233
-    - _CornerRadius: 1.3
+    - _BevelBright: 0.3
+    - _BevelWidth: 0.07
+    - _CornerRadius: 12
     - _PressDepth: 0
-    - _RimPower: 2.25
+    - _RimPower: 4
     - _Stencil: 0
     m_Colors:
     - _BaseColor: {r: 0.71, g: 0.878, b: 0.9689999, a: 0.92}
