@@ -30,6 +30,7 @@ namespace ARHealthCare.UI
         [Header("Avatar Toggle")]
         [Tooltip("Optional label on the Toggle Avatar button - text is updated when toggled")]
         [SerializeField] private TextMeshProUGUI _toggleAvatarButtonLabel;
+        [SerializeField] private GameObject _PatientIssueMarkerPrefab;
 
         private bool _avatarHidden;
         private bool _holoOpen;
@@ -140,11 +141,13 @@ namespace ARHealthCare.UI
             {
                 uiTracking.StartTrackingFromCore();
                 _avatarHidden = false;
+                _PatientIssueMarkerPrefab.SetActive(true);
             }
             else
             {
                 uiTracking.HideOnlyAvatar();
                 _avatarHidden = true;
+                _PatientIssueMarkerPrefab.SetActive(false);
             }
 
             if (_toggleAvatarButtonLabel != null)

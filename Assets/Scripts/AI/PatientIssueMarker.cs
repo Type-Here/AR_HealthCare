@@ -67,6 +67,9 @@ namespace ARHealthCare.AI
             var interactable = GetComponent<UnityEngine.XR.Interaction.Toolkit.Interactables.XRSimpleInteractable>();
             if (interactable != null)
                 interactable.selectEntered.AddListener(_ => ToggleMoveMode());
+            
+            //Set GO of Mesh Renderer enabled only if we have an avatar animator
+            if (_markerRenderer != null) _markerRenderer.enabled = _avatarAnimator != null;
         }
 
         private void LateUpdate()
