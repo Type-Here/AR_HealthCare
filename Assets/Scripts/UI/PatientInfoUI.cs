@@ -13,6 +13,9 @@ public class PatientProblemsUI : MonoBehaviour
     {
         GameObject item = Instantiate(problemItemPrefab, contentParent);
 
+        //Force position to zero so it doesn't inherit any unwanted offsets from the prefab.
+        item.transform.localPosition = new Vector3(132f, -17f, 0f);
+
         // Force item to stretch horizontally so TMP wraps correctly instead of overflowing.
         if (item.TryGetComponent<RectTransform>(out var rt))
         {
@@ -26,8 +29,8 @@ public class PatientProblemsUI : MonoBehaviour
         if (tmp != null)
         {
             tmp.textWrappingMode = TextWrappingModes.Normal;
-            tmp.fontSizeMax = 9;
-            tmp.fontSizeMin = 6;
+            tmp.fontSizeMax = 9.5f;
+            tmp.fontSizeMin = 7f;
             tmp.enableAutoSizing = true;
             tmp.text = text;
         }
